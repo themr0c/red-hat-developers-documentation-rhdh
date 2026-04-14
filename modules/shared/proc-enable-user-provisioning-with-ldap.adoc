@@ -9,7 +9,7 @@ When {rhbk-brand-name} ({rhbk}) depends on Lightweight Directory Access Protocol
 .Prerequisites
 * You have configured xref:enable-authentication-with-rhbk_{parent-context}[authentication with {rhbk-brand-name} ({rhbk})].
 
-* You have xref:share-a-secret-with-ldap_share-a-secret-with-your-identity-provider[shared a secret with LDAP].
+* You have xref:share-a-secret-with-ldap_{secrets-context}[shared a secret with LDAP].
 
 .Procedure
 
