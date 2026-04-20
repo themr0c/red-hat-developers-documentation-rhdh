@@ -85,10 +85,10 @@ jobs:
       pull-requests: write
 
     steps:
-      - name: Checkout main branch for trusted build scripts
+      - name: Checkout trusted build scripts from base branch
         uses: actions/checkout@v4
         with:
-          ref: main
+          ref: ${{ github.event.pull_request.base.ref }}
           path: trusted-scripts
 
       - name: Checkout PR branch for content to build
@@ -131,15 +131,8 @@ jobs:
         run: |
           echo "Building PR ${{ github.event.pull_request.number }}"
           # Copy trusted build scripts from base branch (not content)
-          # Guard each file — older branches (1.8, 1.9) may not have them
-          for f in build/scripts/build-ccutil.sh build/scripts/build-orchestrator.js build/scripts/error-patterns.json; do
-            if [[ -f "trusted-scripts/$f" ]]; then cp "trusted-scripts/$f" "pr-content/$f"; fi
-          done
-          if [[ -d "trusted-scripts/build/scripts/cqa" ]]; then
-            rm -rf pr-content/build/scripts/cqa
-            cp -r trusted-scripts/build/scripts/cqa pr-content/build/scripts/cqa
-          fi
-          for f in lychee.toml .lycheeignore; do
+          # Guard each file — older branches may not have them
+          for f in build/scripts/build-ccutil.sh build/scripts/build-orchestrator.js build/scripts/error-patterns.json lychee.toml .lycheeignore; do
             if [[ -f "trusted-scripts/$f" ]]; then cp "trusted-scripts/$f" "pr-content/$f"; fi
           done
           touch pr-content/.lycheecache
