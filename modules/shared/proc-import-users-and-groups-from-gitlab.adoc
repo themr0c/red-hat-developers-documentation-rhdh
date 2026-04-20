@@ -49,9 +49,14 @@ Enter your configured link:https://docs.gitlab.com/user/group/[GitLab parent gro
 
 `relations`::
 Optional. Specify the types of group memberships to include during ingestion. You can use the following values:
-. `INHERITED`: Optional. Includes members of any ancestor groups as members of the current group.
-. `DESCENDANTS`: Optional. Includes members of any descendant groups as members of the current group.
-. `SHARED_FROM_GROUPS`: Optional. Includes members of any invited groups as members of the current group.
+`INHERITED`:::
+Optional. Includes members of any ancestor groups as members of the current group.
+
+`DESCENDANTS`:::
+Optional. Includes members of any descendant groups as members of the current group.
+
+`SHARED_FROM_GROUPS`:::
+Optional. Includes members of any invited groups as members of the current group.
 
 `groupPattern`::
 Optional. Filters found groups based on provided pattern. Defaults to `[\s\S]*`, which means to not filter anything.
