@@ -97,11 +97,13 @@ jobs:
 
       - name: Copy trusted scripts into PR content
         run: |
-          rm -rf pr-content/build/scripts/cqa
-          cp -r trusted-scripts/build/scripts/cqa pr-content/build/scripts/cqa
-          cp trusted-scripts/build/scripts/build-ccutil.sh pr-content/build/scripts/build-ccutil.sh
-          cp trusted-scripts/build/scripts/build-orchestrator.js pr-content/build/scripts/build-orchestrator.js
-          cp trusted-scripts/build/scripts/error-patterns.json pr-content/build/scripts/error-patterns.json
+          if [[ -d "trusted-scripts/build/scripts/cqa" ]]; then
+            rm -rf pr-content/build/scripts/cqa
+            cp -r trusted-scripts/build/scripts/cqa pr-content/build/scripts/cqa
+          fi
+          for f in build/scripts/build-ccutil.sh build/scripts/build-orchestrator.js build/scripts/error-patterns.json; do
+            if [[ -f "trusted-scripts/$f" ]]; then cp "trusted-scripts/$f" "pr-content/$f"; fi
+          done
           for f in lychee.toml .lycheeignore; do
             if [[ -f "trusted-scripts/$f" ]]; then cp "trusted-scripts/$f" "pr-content/$f"; fi
           done
