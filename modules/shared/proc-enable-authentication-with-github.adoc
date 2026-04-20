@@ -81,11 +81,7 @@ In production mode, configure only one resolver to make sure users are securely 
 
 `resolver`::::
 Enter the sign-in resolver name.
-Available resolvers:
-
-. `usernameMatchingUserEntityName`
-. `preferredUsernameMatchingUserEntityName`
-. `emailMatchingUserEntityProfileEmail`
+Available resolvers: `usernameMatchingUserEntityName`, `preferredUsernameMatchingUserEntityName`, `emailMatchingUserEntityProfileEmail`.
 
 `dangerouslyAllowSignInWithoutUserInCatalog`::::
 Enter `true` to configure the sign-in resolver to bypass the user provisioning requirement in the {product-short} software catalog.
