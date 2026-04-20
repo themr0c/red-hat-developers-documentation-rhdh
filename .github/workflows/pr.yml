@@ -85,10 +85,10 @@ jobs:
       pull-requests: write
 
     steps:
-      - name: Checkout trusted build scripts from ${{ github.event.pull_request.base.ref }} branch
+      - name: Checkout main branch for trusted build scripts
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.base.ref }}
+          ref: main
           path: trusted-scripts
 
       - name: Checkout PR branch for content to build
