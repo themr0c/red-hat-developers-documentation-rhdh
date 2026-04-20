@@ -11,7 +11,7 @@ Import GitLab users and groups to the {product} software catalog.
 
 .Procedure
 
-. Add a GitLab provider section to your {product-very-short} `{my-app-config-file}` file:
+* Add a GitLab provider section to your {product-very-short} `{my-app-config-file}` file:
 +
 [source,yaml,subs="+quotes,+attributes"]
 ----
