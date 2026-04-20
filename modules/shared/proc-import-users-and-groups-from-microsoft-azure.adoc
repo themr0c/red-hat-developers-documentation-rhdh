@@ -13,7 +13,6 @@ Import {azure-brand-name} users and groups to the {product} software catalog.
 
 . Enable the Microsoft Graph catalog provider plugin in your `dynamic-plugins.yaml`
 file.
-This plugin imports {azure-short} users and groups to the {product-short} software catalog.
 +
 [source,yaml]
 ----
@@ -22,7 +21,7 @@ plugins:
     disabled: false
 ----
 
-. Enable provisioning {azure-short} users and groups to the {product-short} software catalog, by adding the Microsoft Graph catalog provider section in your `{my-app-config-file}` file:
+. Add a Microsoft Graph catalog provider section to your `{my-app-config-file}` file:
 +
 [id=microsoftGraphOrgProviderId]
 [source,yaml]
@@ -161,7 +160,7 @@ See link:https://learn.microsoft.com/en-us/graph/search-query-parameter[Microsof
 Enter the link:https://learn.microsoft.com/en-us/graph/api/resources/schemaextension?view=graph-rest-1.0[Microsoft Graph resource type] list to retrieve.
 
 .Verification
-* To verify user and group provisioning, check the console logs for `MicrosoftGraphOrgEntityProvider` events.
+* Check the console logs for `MicrosoftGraphOrgEntityProvider` events.
 +
 Successful synchronization example:
 +

@@ -15,8 +15,6 @@ Import {rhbk-brand-name} ({rhbk}) users and groups to the {product} software cat
 +
 The plugin is named after {rhbk} upstream project.
 +
-This plugin imports {rhbk} users and groups to the {product-short} software catalog.
-+
 [source,yaml]
 ----
 plugins:
@@ -24,7 +22,7 @@ plugins:
     disabled: false
 ----
 
-. Enable provisioning {rhbk} users and groups to the {product-short} software catalog, by adding the `catalog.providers.keycloakOrg` section to your `{my-app-config-file}` file:
+. Add a `catalog.providers.keycloakOrg` section to your `{my-app-config-file}` file:
 +
 [id=keycloakOrgProviderId]
 [source,yaml]
@@ -98,7 +96,7 @@ Enter the initial delay to wait for before starting the user provisioning job.
 Supports ISO duration and "human duration" as used in code.
 
 .Verification
-* To verify user and group provisioning, check the console logs.
+* Check the console logs.
 +
 Successful synchronization example:
 +
