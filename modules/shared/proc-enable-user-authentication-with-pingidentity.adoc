@@ -4,11 +4,11 @@
 = Enable user authentication with PingIdentity
 
 [role="_abstract"]
-You can enable authentication with PingIdentity to allow users to sign in to {product-short} using their PingFederate or PingOne credentials.
+You can enable authentication with PingFederate to allow users to sign in to {product-short} using their PingFederate credentials.
 
 .Prerequisites
 * You have {configuring-book-link}[added a custom {product-short} application configuration], and have enough permissions to change it.
-* You have a PingFederate or PingOne instance with OIDC capability.
+* You have a PingFederate instance with OIDC capability.
 +
 [TIP]
 ====
@@ -16,7 +16,7 @@ Alternatively, ask your PingIdentity administrator to prepare the required OIDC 
 ====
 
 .Procedure
-. Register your {product-short} application in PingIdentity:
+. Register your {product-short} application in PingFederate:
 
 .. Create an OIDC application or client connection with:
 ... A distinctive **Client ID**.
