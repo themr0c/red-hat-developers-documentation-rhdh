@@ -21,7 +21,7 @@ auth:
     secret: ${SESSION_SECRET}
 ----
 
-. Enable the {rhbk} authentication provider, by adding the OIDC provider section in your  `{my-app-config-file}` file:
+. Add an OIDC provider section to your  `{my-app-config-file}` file:
 +
 [source,yaml]
 ----
@@ -155,7 +155,6 @@ auth:
 ----
 
 .Verification
-. To verify {rhbk} user authentication:
-.. Go to the {product-short} login page.
-.. Your {product-short} sign-in page displays *Sign in using OIDC* and the Guest user sign-in is disabled.
-.. Log in with OIDC by using the saved **Username** and **Password** values.
+. Go to the {product-short} login page.
+. Your {product-short} sign-in page displays *Sign in using OIDC* and the Guest user sign-in is disabled.
+. Log in with OIDC by using the saved **Username** and **Password** values.

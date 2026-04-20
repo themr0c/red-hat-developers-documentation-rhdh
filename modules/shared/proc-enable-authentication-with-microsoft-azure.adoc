@@ -11,7 +11,7 @@ Configure {azure-brand-name} as your {product} sign-in provider.
 
 .Procedure
 
-. Enable {azure-short} authentication, by adding the Microsoft authentication provider to your `{my-app-config-file}` file content:
+. Add the Microsoft authentication provider to your `{my-app-config-file}` file:
 +
 [source,yaml,subs="+quotes,+attributes"]
 ----
@@ -129,7 +129,6 @@ auth:
 ----
 
 .Verification
-. To verify {azure-short} user authentication:
-.. Go to the {product-short} login page.
-.. Your {product-short} sign-in page displays *Sign in using Microsoft* and the Guest user sign-in is disabled.
-.. Log in with an {azure-short} account.
+. Go to the {product-short} login page.
+. Your {product-short} sign-in page displays *Sign in using Microsoft* and the Guest user sign-in is disabled.
+. Log in with an {azure-short} account.

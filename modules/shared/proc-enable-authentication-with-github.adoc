@@ -11,7 +11,7 @@ Configure GitHub as your {product} sign-in provider.
 
 .Procedure
 
-. Enable the GitHub authentication provider, by adding the GitHub authentication provider section to your `{my-app-config-file}` file:
+. Add a GitHub authentication provider section to your `{my-app-config-file}` file:
 +
 [source,yaml]
 ----
@@ -92,7 +92,7 @@ Enter `true` to configure the sign-in resolver to bypass the user provisioning r
 +
 [WARNING]
 ====
-In production more, do not enable `dangerouslyAllowSignInWithoutUserInCatalog`.
+In production mode, do not enable `dangerouslyAllowSignInWithoutUserInCatalog`.
 ====
 
 . To disable the guest login option, in the `{my-app-config-file}` file, set the authentication environment to `production`:
@@ -104,7 +104,6 @@ auth:
 ----
 
 .Verification
-. To verify GitHub authentication:
-.. Go to the {product-short} login page.
-.. Your {product-short} sign-in page displays *Sign in using GitHub* and the Guest user sign-in is disabled.
-.. Log in with a GitHub account.
+. Go to the {product-short} login page.
+. Your {product-short} sign-in page displays *Sign in using GitHub* and the Guest user sign-in is disabled.
+. Log in with a GitHub account.

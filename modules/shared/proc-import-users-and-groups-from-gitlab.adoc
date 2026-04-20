@@ -11,7 +11,7 @@ Import GitLab users and groups to the {product} software catalog.
 
 .Procedure
 
-. Enable provisioning for GitLab users and groups to the {product-short} software catalog by adding the provider section to your {product-very-short} `{my-app-config-file}` file:
+. Add a GitLab provider section to your {product-very-short} `{my-app-config-file}` file:
 +
 [source,yaml,subs="+quotes,+attributes"]
 ----
@@ -63,13 +63,13 @@ Set to `true` to import only users who are direct members of the configured grou
 Set to `true` to include users who do not occupy a paid seat. This setting applies only to GitLab SaaS.
 
 `schedule.initialDelay`::
-Enter your schedule initial delay, in the ISO duration or "human duration" format.
+Enter your schedule initial delay, in the ISO duration or `HumanDuration` format.
 
 `schedule.frequency`::
-Enter your schedule frequency, in the cron, ISO duration, or "human duration" format.
+Enter your schedule frequency, in the cron, ISO duration, or `HumanDuration` format.
 
 `schedule.timeout`::
-Enter your schedule timeout, in the ISO duration or "human duration" format.
+Enter your schedule timeout, in the ISO duration or `HumanDuration` format.
 
 .Verification
 * Open {product-very-short} and wait for first ingestion.
