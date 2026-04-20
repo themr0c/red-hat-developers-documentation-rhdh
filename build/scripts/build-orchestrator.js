@@ -32,12 +32,13 @@ const SAFE_PATH = '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
 // ── Argument parsing ─────────────────────────────────────────────────────────
 
 function parseArgs(argv) {
-  const args = { branch: 'main', verbose: false, jobs: cpus().length };
+  const args = { branch: 'main', verbose: false, jobs: cpus().length, noCqa: false };
   for (let i = 2; i < argv.length; i++) {
     switch (argv[i]) {
       case '-b': args.branch = argv[++i]; break;
       case '--verbose': args.verbose = true; break;
       case '--jobs': args.jobs = Number.parseInt(argv[++i], 10); break;
+      case '--no-cqa': args.noCqa = true; break;
     }
   }
   return args;
@@ -523,6 +524,7 @@ function printLycheeSummary(lycheeResult) {
 }
 
 function printCqaSummary(cqaResult) {
+  if (cqaResult.status === 'skipped') return;
   console.log('\n=== CQA (Content Quality Assessment) ===');
   const s = cqaResult.stats || {};
   console.log(`Checks: ${s.total} total, ${s.pass} pass, ${s.fail} fail`);
@@ -662,9 +664,10 @@ async function main() {
     lycheeResult.errors = classifyErrors(lycheeResult.output, patterns);
   }
 
-  // Run CQA content quality assessment (skip when invoked from CQA-14 to avoid recursion)
-  const cqaResult = process.env.CQA_RUNNING
-    ? { status: 'passed', duration: 0, output: '', stats: { total: 0, pass: 0, fail: 0 } }
+  // Run CQA content quality assessment
+  // Skip when: --no-cqa flag (CI uses separate CQA workflow), or CQA_RUNNING env (CQA-14 recursion guard)
+  const cqaResult = (args.noCqa || process.env.CQA_RUNNING)
+    ? { status: 'skipped', duration: 0, output: '', stats: { total: 0, pass: 0, fail: 0 } }
     : await (async () => {
         console.log('\nRunning CQA content quality assessment...');
         return runCqa(repoRoot, args.verbose);
@@ -678,10 +681,9 @@ async function main() {
   // Write JSON report
   writeReport(args.branch, buildResults, lycheeResult, cqaResult, args.jobs, totalDuration, repoRoot);
 
-  // Exit with error if any builds, lychee, or CQA failed
+  // Exit with error if any builds or lychee failed (CQA has its own workflow)
   const hasFailed = buildResults.some(r => r.status === 'failed')
-    || lycheeResult.status === 'failed'
-    || cqaResult.status === 'failed';
+    || lycheeResult.status === 'failed';
   process.exit(hasFailed ? 1 : 0);
 }
 

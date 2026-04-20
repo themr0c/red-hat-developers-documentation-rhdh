@@ -104,7 +104,7 @@ jobs:
           # update
           sudo apt-get update -y || true
           # install
-          sudo apt-get -y -q install podman rsync && podman --version
+          sudo apt-get -y -q install podman && podman --version
           echo "GIT_BRANCH=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_ENV
 
       - name: Install lychee
@@ -130,14 +130,18 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.RHDH_BOT_TOKEN }}
         run: |
           echo "Building PR ${{ github.event.pull_request.number }}"
-          rsync -az trusted-scripts/* pr-content/
-          # some files are new in main/1.10, so check if they exist before copying
-          for f in trusted-scripts/.lycheeignore trusted-scripts/lychee.toml; do
-            if [[ -f $f ]]; then rsync -az $f pr-content/; fi
+          # Copy trusted build scripts from base branch (not content)
+          cp trusted-scripts/build/scripts/build-ccutil.sh pr-content/build/scripts/build-ccutil.sh
+          cp trusted-scripts/build/scripts/build-orchestrator.js pr-content/build/scripts/build-orchestrator.js
+          cp trusted-scripts/build/scripts/error-patterns.json pr-content/build/scripts/error-patterns.json
+          rm -rf pr-content/build/scripts/cqa
+          cp -r trusted-scripts/build/scripts/cqa pr-content/build/scripts/cqa
+          for f in lychee.toml .lycheeignore; do
+            if [[ -f "trusted-scripts/$f" ]]; then cp "trusted-scripts/$f" "pr-content/$f"; fi
           done
           touch pr-content/.lycheecache
           cd pr-content
-          build/scripts/build-ccutil.sh -b "pr-${{ github.event.number }}"
+          build/scripts/build-ccutil.sh -b "pr-${{ github.event.number }}" --no-cqa
 
       - name: Pull from origin before pushing (if possible)
         if: steps.build.outcome == 'success'
@@ -187,23 +191,10 @@ jobs:
                   return `### ${r.title}\n${errs}`;
                 }).join('\n\n');
 
-                let cqaDetails = '';
-                if (report.cqa && report.cqa.status === 'failed') {
-                  const s = report.cqa.stats || {};
-                  cqaDetails = `### CQA (Content Quality Assessment)\n` +
-                    `${s.total} checks: ${s.pass} pass, ${s.fail} fail\n\n`;
-                  if (report.cqa.output) {
-                    cqaDetails += `<details>\n<summary>CQA checklist</summary>\n\n` +
-                      `${report.cqa.output}\n</details>\n\n`;
-                  }
-                  cqaDetails += `Run \`node build/scripts/cqa/index.js --all\` locally for details.\n\n`;
-                }
-
                 body = `## :x: Build failed\n\n` +
                   `${report.titles.passed}/${report.titles.total} titles built successfully | ` +
                   `${report.titles.failed} failed | ${report.duration}s\n\n` +
                   `${details}\n\n` +
-                  `${cqaDetails}` +
                   `[View full logs](${runUrl}) | ${now}`;
               } else {
                 body = `## :x: Build failed\n\n` +
