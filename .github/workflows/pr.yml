@@ -192,13 +192,14 @@ jobs:
             echo "html_built=true" >> "$GITHUB_OUTPUT"
           fi
 
+      # Avoid push conflicts: pull latest gh-pages before deploying new preview content
       - name: Pull from origin before pushing (if possible)
         if: steps.check_html.outputs.html_built == 'true'
         run: |
           cd pr-content
           /usr/bin/git pull origin gh-pages || true
 
-      # repo must be public for this to work
+      # Always publish the preview when HTML has been built, even with broken links or CQA alerts
       - name: Deploy
         if: steps.check_html.outputs.html_built == 'true'
         uses: peaceiris/actions-gh-pages@v4
