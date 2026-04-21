@@ -32,12 +32,13 @@ const SAFE_PATH = '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
 // ── Argument parsing ─────────────────────────────────────────────────────────
 
 function parseArgs(argv) {
-  const args = { branch: 'main', verbose: false, jobs: cpus().length };
+  const args = { branch: 'main', verbose: false, jobs: cpus().length, noCqa: false };
   for (let i = 2; i < argv.length; i++) {
     switch (argv[i]) {
       case '-b': args.branch = argv[++i]; break;
       case '--verbose': args.verbose = true; break;
       case '--jobs': args.jobs = Number.parseInt(argv[++i], 10); break;
+      case '--no-cqa': args.noCqa = true; break;
     }
   }
   return args;
@@ -268,11 +269,53 @@ async function ensureLychee(repoRoot) {
   return lychee;
 }
 
-async function runLychee(repoRoot, verbose) {
+// ── Cross-title link remapping ───────────────────────────────────────────────
+
+function buildRemapArgs(repoRoot, branch) {
+  const attrsPath = join(repoRoot, 'artifacts', 'attributes.adoc');
+  if (!existsSync(attrsPath)) return [];
+
+  const attrs = readFileSync(attrsPath, 'utf8');
+  const generatedDir = join(repoRoot, 'titles-generated', branch);
+  if (!existsSync(generatedDir)) return [];
+
+  // Extract key-prefix -> slug from book-link attributes
+  const bookLinks = {};
+  const bookLinkRe = /^:([\w-]+)-book-link:\s+\{product-docs-link\}\/html-single\/([^/\s]+)\/index/gm;
+  let m;
+  while ((m = bookLinkRe.exec(attrs)) !== null) {
+    bookLinks[m[1]] = m[2];
+  }
+
+  // For each title dir, read :title: to extract the book-title key prefix
+  // Expects normalized titles: :title: {<name>-book-title}
+  const titleDirs = readdirSync(generatedDir).filter(d =>
+    existsSync(join(generatedDir, d, 'index.html'))
+  );
+  const remaps = [];
+  for (const dir of titleDirs) {
+    const masterPath = join(repoRoot, 'titles', dir, 'master.adoc');
+    if (!existsSync(masterPath)) continue;
+    const masterHead = readFileSync(masterPath, 'utf8').slice(0, 500);
+    const titleMatch = masterHead.match(/^:title:\s+\{([\w-]+)-book-title\}$/m);
+    if (!titleMatch) continue;
+    const keyPrefix = titleMatch[1];
+    const slug = bookLinks[keyPrefix];
+    if (!slug) continue;
+    const localUrl = `file://${join(generatedDir, dir, 'index.html')}`;
+    remaps.push(String.raw`https://docs\.redhat\.com/en/documentation/red_hat_developer_hub/[^/]+/html-single/${slug}/index ${localUrl}`);
+  }
+
+  return remaps.flatMap(r => ['--remap', r]);
+}
+
+async function runLychee(repoRoot, branch, verbose) {
   const lycheeBin = await ensureLychee(repoRoot);
+  const remapArgs = buildRemapArgs(repoRoot, branch);
   const { code, duration, output } = await spawnCapture(lycheeBin, [
     '--config', join(repoRoot, 'lychee.toml'),
     '--format', 'json',
+    ...remapArgs,
     join(repoRoot, 'titles-generated'),
   ], { cwd: repoRoot, verbose, groupName: 'lychee' });
 
@@ -339,6 +382,31 @@ async function traceUrlToSource(url, repoRoot) {
   ], { cwd: repoRoot, verbose: false });
   if (code !== 0 || !output.trim()) return [];
   return output.trim().split('\n').map(f => f.replace(repoRoot + '/', ''));
+}
+
+// ── CQA content quality assessment ─────────────────────────────────────────
+
+async function runCqa(repoRoot, verbose) {
+  const cqaScript = join(__dirname, 'cqa', 'index.js');
+  const { code, duration, output } = await spawnCapture('node', [cqaScript, '--all'], {
+    cwd: repoRoot, verbose, groupName: 'CQA',
+  });
+
+  // Parse summary line from output: "Checks: 19 total, 19 pass, 0 fail"
+  let checksTotal = 0, checksPass = 0, checksFail = 0;
+  const summaryMatch = output.match(/Checks:\s+(\d+)\s+total,\s+(\d+)\s+pass,\s+(\d+)\s+fail/);
+  if (summaryMatch) {
+    checksTotal = Number.parseInt(summaryMatch[1], 10);
+    checksPass = Number.parseInt(summaryMatch[2], 10);
+    checksFail = Number.parseInt(summaryMatch[3], 10);
+  }
+
+  return {
+    status: code === 0 ? 'passed' : 'failed',
+    duration,
+    output,
+    stats: { total: checksTotal, pass: checksPass, fail: checksFail },
+  };
 }
 
 // ── Index HTML generation ────────────────────────────────────────────────────
@@ -455,7 +523,20 @@ function printLycheeSummary(lycheeResult) {
   console.log(lastLines.map(l => '  ' + l).join('\n'));
 }
 
-function printSummary(results, lycheeResult, patterns, totalDuration) {
+function printCqaSummary(cqaResult) {
+  if (cqaResult.status === 'skipped') return;
+  console.log('\n=== CQA (Content Quality Assessment) ===');
+  const s = cqaResult.stats || {};
+  console.log(`Checks: ${s.total} total, ${s.pass} pass, ${s.fail} fail`);
+  if (cqaResult.status === 'failed') {
+    if (cqaResult.output) {
+      console.log(cqaResult.output);
+    }
+    console.log('CQA validation failed — run `node build/scripts/cqa/index.js --all` for details');
+  }
+}
+
+function printSummary(results, lycheeResult, cqaResult, patterns, totalDuration) {
   const passed = results.filter(r => r.status === 'passed').length;
   const failed = results.filter(r => r.status === 'failed').length;
 
@@ -469,11 +550,15 @@ function printSummary(results, lycheeResult, patterns, totalDuration) {
   if (lycheeResult) {
     printLycheeSummary(lycheeResult);
   }
+
+  if (cqaResult) {
+    printCqaSummary(cqaResult);
+  }
 }
 
 // ── JSON report ──────────────────────────────────────────────────────────────
 
-function writeReport(branch, results, lycheeResult, concurrency, totalDuration, repoRoot) {
+function writeReport(branch, results, lycheeResult, cqaResult, concurrency, totalDuration, repoRoot) {
   const passed = results.filter(r => r.status === 'passed').length;
   const failed = results.filter(r => r.status === 'failed').length;
 
@@ -498,6 +583,11 @@ function writeReport(branch, results, lycheeResult, concurrency, totalDuration, 
       status: lycheeResult.status,
       stats: lycheeResult.stats || {},
       errors: lycheeResult.errors || [],
+    } : null,
+    cqa: cqaResult ? {
+      status: cqaResult.status,
+      stats: cqaResult.stats || {},
+      output: cqaResult.output || '',
     } : null,
   };
 
@@ -569,21 +659,32 @@ async function main() {
 
   // Run lychee link validation
   console.log('\nRunning link validation (lychee)...');
-  const lycheeResult = await runLychee(repoRoot, args.verbose);
+  const lycheeResult = await runLychee(repoRoot, args.branch, args.verbose);
   if (lycheeResult.errors.length === 0) {
     lycheeResult.errors = classifyErrors(lycheeResult.output, patterns);
   }
 
+  // Run CQA content quality assessment
+  // Skip when: --no-cqa flag, or CQA_RUNNING env (CQA-14 recursion guard)
+  const cqaResult = (args.noCqa || process.env.CQA_RUNNING)
+    ? { status: 'skipped', duration: 0, output: '', stats: { total: 0, pass: 0, fail: 0 } }
+    : await (async () => {
+        console.log('\nRunning CQA content quality assessment...');
+        return runCqa(repoRoot, args.verbose);
+      })();
+
   const totalDuration = Math.round((Date.now() - totalStart) / 1000);
 
   // Print summary
-  printSummary(buildResults, lycheeResult, patterns, totalDuration);
+  printSummary(buildResults, lycheeResult, cqaResult, patterns, totalDuration);
 
   // Write JSON report
-  writeReport(args.branch, buildResults, lycheeResult, args.jobs, totalDuration, repoRoot);
+  writeReport(args.branch, buildResults, lycheeResult, cqaResult, args.jobs, totalDuration, repoRoot);
 
-  // Exit with error if any builds or lychee failed
-  const hasFailed = buildResults.some(r => r.status === 'failed') || lycheeResult.status === 'failed';
+  // Exit with error if any builds, lychee, or CQA failed
+  const hasFailed = buildResults.some(r => r.status === 'failed')
+    || lycheeResult.status === 'failed'
+    || cqaResult.status === 'failed';
   process.exit(hasFailed ? 1 : 0);
 }
 
