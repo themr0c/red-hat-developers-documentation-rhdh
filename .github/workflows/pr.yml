@@ -210,6 +210,10 @@ jobs:
           keep_files: true
           publish_dir: ./pr-content/titles-generated
 
+      # Post one consolidated PR comment with build results, preview link, and CQA checklist.
+      # Preview link is always shown; marked stale when title build failed (HTML not generated).
+      # CQA section is absent on older branches without CQA.
+      # Detects existing comments from both old (two-comment) and new (consolidated) formats.
       - name: Post or update PR comment with doc preview link
         if: always() && steps.build.outcome != 'skipped'
         uses: actions/github-script@v7
