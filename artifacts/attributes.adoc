@@ -137,6 +137,8 @@
 :extend-category-link: {product-docs-link}/#Extend
 :getting-started-on-ocp-for-the-platform-engineer-book-link: {product-docs-link}/html-single/getting_started_with_red_hat_developer_hub_on_red_hat_openshift_container_platform_for_the_platform_engineer/index
 :getting-started-on-ocp-for-the-platform-engineer-book-title: Getting started with {product} on {ocp-brand-name} for the platform engineer
+:helm-chart-configuration-reference-book-url: {product-docs-link}/html-single/helm-chart-configuration-reference/index
+:helm-chart-configuration-reference-book-title: Helm Chart configuration reference
 :install-category-link: {product-docs-link}/#Install
 :installing-and-viewing-plugins-book-link: {product-docs-link}/html-single/installing_and_viewing_plugins_in_red_hat_developer_hub/index
 :installing-and-viewing-plugins-book-title: Installing and viewing plugins in {product}
