@@ -665,7 +665,7 @@ async function main() {
   }
 
   // Run CQA content quality assessment
-  // Skip when: --no-cqa flag (CI uses separate CQA workflow), or CQA_RUNNING env (CQA-14 recursion guard)
+  // Skip when: --no-cqa flag, or CQA_RUNNING env (CQA-14 recursion guard)
   const cqaResult = (args.noCqa || process.env.CQA_RUNNING)
     ? { status: 'skipped', duration: 0, output: '', stats: { total: 0, pass: 0, fail: 0 } }
     : await (async () => {
@@ -681,9 +681,10 @@ async function main() {
   // Write JSON report
   writeReport(args.branch, buildResults, lycheeResult, cqaResult, args.jobs, totalDuration, repoRoot);
 
-  // Exit with error if any builds or lychee failed (CQA has its own workflow)
+  // Exit with error if any builds, lychee, or CQA failed
   const hasFailed = buildResults.some(r => r.status === 'failed')
-    || lycheeResult.status === 'failed';
+    || lycheeResult.status === 'failed'
+    || cqaResult.status === 'failed';
   process.exit(hasFailed ? 1 : 0);
 }
 
