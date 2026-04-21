@@ -32,13 +32,12 @@ const SAFE_PATH = '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
 // ── Argument parsing ─────────────────────────────────────────────────────────
 
 function parseArgs(argv) {
-  const args = { branch: 'main', verbose: false, jobs: cpus().length, noCqa: false };
+  const args = { branch: 'main', verbose: false, jobs: cpus().length };
   for (let i = 2; i < argv.length; i++) {
     switch (argv[i]) {
       case '-b': args.branch = argv[++i]; break;
       case '--verbose': args.verbose = true; break;
       case '--jobs': args.jobs = Number.parseInt(argv[++i], 10); break;
-      case '--no-cqa': args.noCqa = true; break;
     }
   }
   return args;
@@ -665,8 +664,8 @@ async function main() {
   }
 
   // Run CQA content quality assessment
-  // Skip when: --no-cqa flag, or CQA_RUNNING env (CQA-14 recursion guard)
-  const cqaResult = (args.noCqa || process.env.CQA_RUNNING)
+  // Skip when CQA_RUNNING env is set (CQA-14 recursion guard)
+  const cqaResult = (process.env.CQA_RUNNING)
     ? { status: 'skipped', duration: 0, output: '', stats: { total: 0, pass: 0, fail: 0 } }
     : await (async () => {
         console.log('\nRunning CQA content quality assessment...');

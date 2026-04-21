@@ -277,7 +277,7 @@ jobs:
                 if (s.total) {
                   body += `${s.total} checks: ${s.pass} pass, ${s.fail} fail\n\n`;
                 }
-                body += `Run \`node build/scripts/cqa/index.js --all\` locally for details.\n\n`;
+                body += `Run \`node build/scripts/cqa/index.js --all --fix\` locally to review and auto-fix issues.\n\n`;
                 body += `---\n\n`;
               }
             } else {
