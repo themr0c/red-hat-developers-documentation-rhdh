@@ -4,48 +4,90 @@
 = Enable user authentication with PingIdentity
 
 [role="_abstract"]
-You can enable authentication with PingFederate to allow users to sign in to {product-short} using their PingFederate credentials.
+You can enable authentication with PingFederate to allow users to sign in to {product-short} using their PingIdentity credentials and match authenticated users to their LDAP catalog entities.
 
 .Prerequisites
+* You have administrative access to PingFederate with a configured LDAP Data Store.
+* You have xref:enable-user-provisioning-with-ldap_{context}[configured the LDAP catalog provider] in {product-short}.
 * You have {configuring-book-link}[added a custom {product-short} application configuration], and have enough permissions to change it.
-* You have a PingFederate instance with OIDC capability.
-+
-[TIP]
-====
-Alternatively, ask your PingIdentity administrator to prepare the required OIDC application.
-====
 
 .Procedure
-. Register your {product-short} application in PingFederate:
+. Configure the LDAP Data Store for binary attributes.
++
+Configure the Data Store to treat unique identifiers as binary data to ensure they are processed correctly for OGNL transformations.
++
+.. In PingFederate, navigate to **System > Data Stores** and edit your LDAP store.
+.. In **Advanced options > LDAP Binary Attributes**, add `objectGUID` to the list.
+.. In the **Attribute Source** lookup configuration, set the **Encoding Type** for `objectGUID` to **Hex**.
 
-.. Create an OIDC application or client connection with:
-... A distinctive **Client ID**.
-... **Client authentication**: Enabled (confidential client).
-... **Redirect URI**: Set to the OIDC handler URL: `pass:c,a,q[{my-product-url}/api/auth/oidc/handler/frame]`.
+. Create the Authentication Policy Contract.
++
+The contract bridges the LDAP directory and the OIDC policy, transforming the binary GUID into a string format.
++
+.. Create a new contract named `rhdh-contract`.
+.. Add an **Attribute Source** linked to your LDAP Data Store.
+.. Set the **Search Filter** to `sAMAccountName=$\{username}`.
+.. Expose the LDAP UUID attribute (for example, `objectGUID` for Active Directory) within the contract.
+Under **Contract Fulfillment**, map the `sub` claim to the `objectGUID` from LDAP using an **Expression** source.
+.. Enter the following OGNL expression to format the binary GUID as a UUID string:
++
+[source]
+----
+#GUID = #this.get("ds.<ldap-data-source-id>.objectGUID").toString(),
+#GUID.substring(6,8) + #GUID.substring(4,6) + #GUID.substring(2,4) + #GUID.substring(0,2) + "-" +
+#GUID.substring(10,12) + #GUID.substring(8,10) + "-" +
+#GUID.substring(14,16) + #GUID.substring(12,14) + "-" +
+#GUID.substring(16,20) + "-" + #GUID.substring(20,32)
+----
++
+Replace `_<ldap-data-source-id>_` with the ID of your LDAP Data Store in PingFederate.
+
+. Configure OAuth and OIDC scopes.
++
+Ensure PingFederate allows the standard OIDC scopes requested by {product-short}.
++
+.. Navigate to **System > OAuth Scopes**.
+.. Ensure `email` and `profile` are added to the **Common Scopes** list.
+
+. Bridge the contract to the OIDC policy.
++
+Configure the policy to deliver the transformed UUID through the `sub` claim in the ID token and UserInfo endpoint.
++
+.. **Access Token Mapping:** Map the `sub` field from `rhdh-contract` to your **Access Token Manager**.
+.. **OIDC Policy Fulfillment:** Fulfill the `sub` claim by selecting **Access Token** as the source and `sub` as the value.
+.. **Enable Delivery:** In the **OIDC Policy Attribute Contract**, select the **ID Token** and **UserInfo** checkboxes for the `sub` claim.
+.. **Extend Contract:** Add `ldap_uuid` to the **Attribute Contract** and map it to the `sub` value by using the Access Token to ensure consistency.
+
+. Create the OIDC client.
++
+.. In PingFederate, navigate to **Applications > OAuth Clients** and click **Add Client**.
+.. Under **Client Authentication**, select **Client Secret**, generate a secret, and save it.
+.. Enter the **Redirect URI**: `pass:c,a,q[{my-product-url}/api/auth/oidc/handler/frame]`.
+.. Under **Allowed Grant Types**, select **Authorization Code**.
+.. Under **OpenID Connect > Policy**, select the OIDC policy you created.
 .. Save the following values for the next step:
-. **Client ID**
-. **Client Secret**
-. **OIDC metadata URL**: The `.well-known/openid-configuration` endpoint URL for your PingIdentity instance.
+... **Client ID**
+... **Client Secret**
+... **OIDC metadata URL**: The `.well-known/openid-configuration` endpoint URL for your PingFederate instance.
 
 . Create a long, complex, and unique string to use as the {product-short} session secret key.
 
 . Add your PingIdentity credentials and the session secret key to {product-short}, by adding the following key-value pairs to {configuring-dynamic-plugins-book-link}#provisioning-your-custom-configuration[your {product-short} secrets].
 You can use these secrets in the {product-short} configuration files by using their environment variable name.
 +
-`PING_CLIENT_ID`::
+`AUTH_OIDC_CLIENT_ID`::
 Enter the saved **Client ID**.
 
-`PING_CLIENT_SECRET`::
+`AUTH_OIDC_CLIENT_SECRET`::
 Enter the saved **Client Secret**.
 
-`PING_METADATA_URL`::
+`AUTH_OIDC_METADATA_URL`::
 Enter the saved **OIDC metadata URL**.
 
 `SESSION_SECRET`::
 Enter the created session secret key.
 
-. The OIDC provider authentication backend plugin requires {product-short} to support sessions.
-Enable session support by adding the session secret to your `{my-app-config-file}` file:
+. Enable session support by adding the session secret to your `{my-app-config-file}` file:
 +
 [source,yaml]
 ----
@@ -54,7 +96,7 @@ auth:
     secret: ${SESSION_SECRET}
 ----
 
-. Enable the PingIdentity authentication provider, by adding the OIDC provider section in your `{my-app-config-file}` file:
+. Enable the PingIdentity authentication provider with the LDAP UUID matching resolver, by adding the OIDC provider section in your `{my-app-config-file}` file:
 +
 [source,yaml]
 ----
@@ -63,112 +105,38 @@ auth:
   providers:
     oidc:
       production:
-        metadataUrl: ${PING_METADATA_URL}
-        clientId: ${PING_CLIENT_ID}
-        clientSecret: ${PING_CLIENT_SECRET}
-        prompt: auto
+        metadataUrl: ${AUTH_OIDC_METADATA_URL}
+        clientId: ${AUTH_OIDC_CLIENT_ID}
+        clientSecret: ${AUTH_OIDC_CLIENT_SECRET}
+        signIn:
+          resolvers:
+            - resolver: oidcLdapUuidMatchingAnnotation
+              ldapUuidKey: sub
 signInPage: oidc
 ----
 
 `environment: production`::
-Mark the environment as `production` to hide the Guest login in the {product-short} home page.
+Mark the environment as `production` to hide the Guest login on the {product-short} home page.
 
 `metadataUrl`::
-Enter your PingIdentity OIDC metadata URL, defined earlier.
+Enter your PingFederate OIDC metadata URL, defined earlier.
 
 `clientId`::
-Enter your {product-short} application client ID in PingIdentity, defined earlier.
+Enter your {product-short} application client ID in PingFederate, defined earlier.
 
 `clientSecret`::
-Enter your {product-short} application client secret in PingIdentity, defined earlier.
+Enter your {product-short} application client secret in PingFederate, defined earlier.
 
-`prompt`::
-Enter `auto` to allow the identity provider to automatically determine whether to prompt for credentials or bypass the login redirect if an active PingIdentity session exists.
-+
-The identity provider defaults to `none`, which assumes that you are already logged in. Sign-in requests without an active session are rejected.
+`oidcLdapUuidMatchingAnnotation`::
+Match the authenticated user to an LDAP catalog entity by using the LDAP UUID.
+By default, {product-short} attempts to match the `ldap_uuid` claim from the UserInfo endpoint to the LDAP catalog entity.
+
+`ldapUuidKey`::
+Enter the claim key containing the LDAP UUID.
+Set to `sub` to use the `sub` claim, which contains the transformed UUID from the PingFederate policy contract.
 
 `signInPage`::
-Enter `oidc` to enable the OIDC provider as default sign-in provider.
-
-. Optional: Add optional fields to the OIDC authentication provider section in your `{my-app-config-file}` file:
-+
-[source,yaml]
-----
-auth:
-  providers:
-    oidc:
-      production:
-        metadataUrl: ${PING_METADATA_URL}
-        clientId: ${PING_CLIENT_ID}
-        clientSecret: ${PING_CLIENT_SECRET}
-        callbackUrl: ${PING_CALLBACK_URL}
-        tokenEndpointAuthMethod: ${PING_TOKEN_ENDPOINT_METHOD}
-        tokenSignedResponseAlg: ${PING_SIGNED_RESPONSE_ALG}
-        additionalScopes: ${PING_SCOPE}
-        signIn:
-          resolvers:
-            - resolver: preferredUsernameMatchingUserEntityName
-            - resolver: emailMatchingUserEntityProfileEmail
-            - resolver: emailLocalPartMatchingUserEntityName
-              dangerouslyAllowSignInWithoutUserInCatalog: true
-        sessionDuration: { hours: 24 }
-  backstageTokenExpiration: { minutes: _<user_defined_value>_ }
-signInPage: oidc
-----
-
-`callbackUrl`::
-PingIdentity callback URL.
-
-`tokenEndpointAuthMethod`::
-Enter your token endpoint authentication method.
-
-`tokenSignedResponseAlg`::
-Token signed response algorithm.
-
-`additionalScopes`::
-Enter additional PingIdentity scopes to request during the authentication flow.
-
-`signIn`::
-`resolvers`:::
-After successful authentication, the user signing in must be resolved to an existing user in the {product-short} catalog.
-To best match users securely for your use case, consider configuring a specific resolver.
-+
-Enter the resolver list to override the default resolver.
-+
-Available values:
-
-`preferredUsernameMatchingUserEntityName`::::
-Matches the preferred username with the user entity name.
-
-`emailMatchingUserEntityProfileEmail`::::
-Matches the email with the user entity profile email.
-
-`emailLocalPartMatchingUserEntityName`::::
-Matches the email local part with the user entity name.
-+
-The authentication provider tries each sign-in resolver in order until it succeeds, and fails if none succeed.
-+
-[WARNING]
-====
-In production mode, configure only one resolver to make sure users are securely matched.
-====
-
-`dangerouslyAllowSignInWithoutUserInCatalog: true`::::
-Configure the sign-in resolver to bypass the user provisioning requirement in the {product-short} software catalog.
-+
-[WARNING]
-====
-In production mode, do not enable the `dangerouslyAllowSignInWithoutUserInCatalog` option.
-====
-
-`sessionDuration`::
-Lifespan of the user session.
-Enter a duration in `ms` library format (such as '24h', '2 days'), ISO duration, or "human duration" as used in code.
-
-`backstageTokenExpiration`::
-Enter a value to modify the {product-short} token expiration from its default value of one hour.
-It refers to the validity of short-term cryptographic tokens, not to the session duration.
-The expiration value must be set between 10 minutes and 24 hours.
+Enter `oidc` to enable the OIDC provider as the default sign-in provider.
 
 .Verification
 . Go to the {product-short} login page.
