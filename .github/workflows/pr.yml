@@ -161,15 +161,37 @@ jobs:
             build/scripts/build-ccutil.sh -b "pr-${{ github.event.number }}"
           fi
 
+      - name: Check if HTML was built
+        id: check_html
+        if: always() && steps.build.outcome != 'skipped'
+        run: |
+          if [[ ! -f "pr-content/build-report.json" ]]; then
+            if [[ "${{ steps.build.outcome }}" == "success" ]]; then
+              echo "html_built=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "html_built=false" >> "$GITHUB_OUTPUT"
+            fi
+            exit 0
+          fi
+          title_failures=$(node -e "
+            const r = JSON.parse(require('fs').readFileSync('pr-content/build-report.json','utf8'));
+            console.log(r.results.some(t => t.status === 'failed') ? 'true' : 'false');
+          " 2>&1) || { echo "html_built=false" >> "$GITHUB_OUTPUT"; exit 0; }
+          if [[ "$title_failures" == "true" ]]; then
+            echo "html_built=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "html_built=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Pull from origin before pushing (if possible)
-        if: steps.build.outcome == 'success'
+        if: steps.check_html.outputs.html_built == 'true'
         run: |
           cd pr-content
           /usr/bin/git pull origin gh-pages || true
 
       # repo must be public for this to work
       - name: Deploy
-        if: steps.build.outcome == 'success'
+        if: steps.check_html.outputs.html_built == 'true'
         uses: peaceiris/actions-gh-pages@v4
         # if: github.ref == 'refs/heads/main'
         with:
