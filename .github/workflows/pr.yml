@@ -139,6 +139,7 @@ jobs:
         continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ secrets.RHDH_BOT_TOKEN }}
+          # Used by CQA-15 (redirects check) to diff against the base branch
           CQA_BASE_REF: base/${{ github.event.pull_request.base.ref }}
         run: |
           echo "Building PR ${{ github.event.pull_request.number }}"
