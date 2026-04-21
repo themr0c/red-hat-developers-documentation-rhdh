@@ -154,8 +154,10 @@ jobs:
           fi
           touch pr-content/.lycheecache
           cd pr-content
+          # Add base branch as remote so CQA checks can diff PR content against it
           git remote add base https://github.com/${{ github.event.pull_request.base.repo.full_name }}.git
           git fetch base ${{ github.event.pull_request.base.ref }}
+          # Orchestrator runs ccutil + lychee + CQA; older branches fall back to ccutil only
           if [[ -f "build/scripts/build-orchestrator.js" ]]; then
             node build/scripts/build-orchestrator.js -b "pr-${{ github.event.number }}"
           else
