@@ -164,10 +164,14 @@ jobs:
             build/scripts/build-ccutil.sh -b "pr-${{ github.event.number }}"
           fi
 
+      # Determine if HTML was generated, so deploy runs even when only CQA/lychee fail.
+      # Sets html_built=true when all titles built, false when any title failed or no report exists.
       - name: Check if HTML was built
         id: check_html
         if: always() && steps.build.outcome != 'skipped'
         run: |
+          # Older branches (release-1.8/1.9) use build-ccutil.sh and produce no report;
+          # fall back to the build step outcome
           if [[ ! -f "pr-content/build-report.json" ]]; then
             if [[ "${{ steps.build.outcome }}" == "success" ]]; then
               echo "html_built=true" >> "$GITHUB_OUTPUT"
@@ -176,6 +180,8 @@ jobs:
             fi
             exit 0
           fi
+          # Parse the report to check for title build failures specifically;
+          # CQA/lychee failures do NOT prevent deployment
           title_failures=$(node -e "
             const r = JSON.parse(require('fs').readFileSync('pr-content/build-report.json','utf8'));
             console.log(r.results.some(t => t.status === 'failed') ? 'true' : 'false');
