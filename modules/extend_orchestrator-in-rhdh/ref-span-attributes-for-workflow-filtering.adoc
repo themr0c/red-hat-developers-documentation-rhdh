@@ -14,5 +14,5 @@ To locate specific workflow executions or trace a process through various states
 * `sonataflow.workflow.state`: Indicates the name of the current workflow state, for example, `StartEvent`.
 * `sonataflow.process.instance.state`: Indicates the current state of the process instance, such as `ACTIVE`, `COMPLETED`, `ERROR`, or `SUSPENDED`.
 * `sonataflow.transaction.id`: Indicates the ID used to correlate multiple workflows in a single business transaction.
-* `sonataflow.tracker.{asterisk}`: Indicates custom attributes converted from `X-TRACKER-{asterisk}` headers.
+* `++sonataflow.tracker.*++`: Indicates custom attributes converted from `++X-TRACKER-*++` headers.
 * `service.name` and `service.version`: Indicates the service identification details from the configuration.
