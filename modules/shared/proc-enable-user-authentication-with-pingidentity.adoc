@@ -4,7 +4,7 @@
 = Enable user authentication with PingIdentity
 
 [role="_abstract"]
-You can enable authentication with PingFederate to allow users to sign in to {product-short} using their PingIdentity credentials and match authenticated users to their LDAP catalog entities.
+You can enable authentication with PingFederate to allow users to sign in to {product-short} by using their PingIdentity credentials and match authenticated users to their LDAP catalog entities.
 
 .Prerequisites
 * You have administrative access to PingFederate with a configured LDAP Data Store.
