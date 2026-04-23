@@ -8,8 +8,8 @@ OpenTelemetry events that mark workflow execution milestones including start, co
 
 To understand the exact chronological order of a workflow's execution, look for OpenTelemetry events that are automatically generated at key lifecycle points. SonataFlow attaches the following events and their specific attributes to spans to mark execution milestones:
 
-* `process.instance.start`: Marks the beginning of the execution. It includes the `process.instance.id`, what `trigger` started it, and the `reference.id`.
-* `process.instance.complete`: Marks the end of the workflow. It includes the `process.instance.id`, the final `outcome`, and the total `duration.ms`.
-* `process.instance.error`: Added when a workflow fails. It includes the `process.instance.id`, the `error.message`, and the `error.type`.
-* `state.started` and `state.completed`: Generated for each individual workflow state. Both include an `event.description` detailing the state execution.
-* `log.message`: Includes the actual application log content within the trace span. It provides the `level`, `logger`, `message`, `thread.name`, and `thread.id`.
+* `process.instance.start`: Indicates the beginning of the execution. This event includes the `process.instance.id`, the `trigger` that started the process, and the `reference.id`.
+* `process.instance.complete`: Indicates the completion of the workflow. This event includes the `process.instance.id`, the final `outcome`, and the total `duration.ms`.
+* `process.instance.error`: Indicates a workflow failure. This event includes the `process.instance.id`, the `error.message`, and the `error.type`.
+* `state.started` and `state.completed`: Indicate the start and completion of individual workflow states. These events include an `event.description` that details the state execution.
+* `log.message`: Indicates the application log content within the trace span. This event provides the `level`, `logger`, `message`, `thread.name`, and `thread.id`.
