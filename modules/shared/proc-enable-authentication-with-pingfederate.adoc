@@ -1,10 +1,10 @@
 :_mod-docs-content-type: PROCEDURE
 
-[id="enable-user-authentication-with-pingidentity_{context}"]
-= Enable user authentication with PingIdentity
+[id="enable-authentication-with-pingfederate_{context}"]
+= Enable authentication with PingFederate
 
 [role="_abstract"]
-You can enable authentication with PingFederate to allow users to sign in to {product-short} by using their PingIdentity credentials and match authenticated users to their LDAP catalog entities.
+You can enable authentication with PingFederate to allow users to sign in to {product-short} by using their PingFederate credentials and match authenticated users to their LDAP catalog entities.
 
 .Prerequisites
 * You have administrative access to PingFederate with a configured LDAP Data Store.
@@ -72,7 +72,7 @@ Configure the policy to deliver the transformed UUID through the `sub` claim in 
 
 . Create a long, complex, and unique string to use as the {product-short} session secret key.
 
-. Add your PingIdentity credentials and the session secret key to {product-short}, by adding the following key-value pairs to {configuring-dynamic-plugins-book-link}#provisioning-your-custom-configuration[your {product-short} secrets].
+. Add your PingFederate credentials and the session secret key to {product-short}, by adding the following key-value pairs to {configuring-dynamic-plugins-book-link}#provisioning-your-custom-configuration[your {product-short} secrets].
 You can use these secrets in the {product-short} configuration files by using their environment variable name.
 +
 `AUTH_OIDC_CLIENT_ID`::
@@ -96,7 +96,7 @@ auth:
     secret: ${SESSION_SECRET}
 ----
 
-. Enable the PingIdentity authentication provider with the LDAP UUID matching resolver by adding the OIDC provider section in your `{my-app-config-file}` file:
+. Enable the PingFederate authentication provider with the LDAP UUID matching resolver by adding the OIDC provider section in your `{my-app-config-file}` file:
 +
 [source,yaml]
 ----
@@ -141,4 +141,4 @@ Enter `oidc` to enable the OIDC provider as the default sign-in provider.
 .Verification
 . Go to the {product-short} login page.
 . Verify that the {product-short} sign-in page displays *Sign in using OIDC* and the Guest user sign-in is disabled.
-. Log in with OIDC by using your PingIdentity user credentials.
+. Log in with OIDC by using your PingFederate user credentials.
