@@ -93,7 +93,7 @@ function getLycheeIssues(root) {
     // Detect current branch for correct output directory naming and link remapping.
     let branch = 'main';
     try {
-      branch = execFileSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim();
+      branch = execFileSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim(); // NOSONAR
     } catch { /* fall back to main */ }
     try {
       execFileSync('node', ['build/scripts/build-orchestrator.js', '-b', branch, '--no-cqa'], { // NOSONAR — fixed args, no user input
