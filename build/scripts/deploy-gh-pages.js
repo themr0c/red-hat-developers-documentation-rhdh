@@ -31,7 +31,7 @@ const RELEASE_NOTES_BASE = 'https://red-hat-developers-documentation.pages.redha
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 function git(cwd, ...args) {
-  const result = execFileSync('git', args, {
+  const result = execFileSync('git', args, { // NOSONAR: git is resolved from PATH in a controlled CI environment
     cwd,
     stdio: ['pipe', 'pipe', 'pipe'],
     timeout: 120_000,
@@ -71,7 +71,8 @@ function getPRState(owner, repo, prNumber) {
         }
         try {
           const json = JSON.parse(data);
-          resolve(json.state === 'closed' ? (json.merged ? 'merged' : 'closed') : 'open');
+          const closedState = json.merged ? 'merged' : 'closed';
+          resolve(json.state === 'closed' ? closedState : 'open');
         } catch { resolve('unknown'); }
       });
       res.on('error', () => resolve('unknown'));
@@ -209,6 +210,26 @@ async function stageAndCommit(deployDir, publishDir, branchDir, message) {
   return true;
 }
 
+function tryRebaseAndPush(deployDir, attempt) {
+  try {
+    git(deployDir, 'pull', '--rebase', 'origin', 'gh-pages');
+  } catch {
+    console.log('Rebase conflict — resetting to remote');
+    try { git(deployDir, 'rebase', '--abort'); } catch {}
+    fetchOrCreateGhPages(deployDir);
+    return false;
+  }
+  try {
+    git(deployDir, 'push', 'origin', 'gh-pages');
+    console.log(`Deployed successfully (attempt ${attempt}, after rebase)`);
+    return true;
+  } catch {
+    console.log('Push failed after rebase, will rebuild');
+    fetchOrCreateGhPages(deployDir);
+    return false;
+  }
+}
+
 async function pushWithRetry(deployDir, publishDir, branchDir, message) {
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     if (attempt > 1) {
@@ -224,25 +245,7 @@ async function pushWithRetry(deployDir, publishDir, branchDir, message) {
       return;
     } catch {
       console.log(`Push rejected (attempt ${attempt}/${MAX_RETRIES})`);
-      if (attempt < MAX_RETRIES) {
-        try {
-          git(deployDir, 'pull', '--rebase', 'origin', 'gh-pages');
-          // Rebase succeeded — push immediately without rebuilding
-          try {
-            git(deployDir, 'push', 'origin', 'gh-pages');
-            console.log(`Deployed successfully (attempt ${attempt}, after rebase)`);
-            return;
-          } catch {
-            console.log('Push failed after rebase, will rebuild');
-            // Reset and rebuild on next iteration
-            fetchOrCreateGhPages(deployDir);
-          }
-        } catch {
-          console.log('Rebase conflict — resetting to remote');
-          try { git(deployDir, 'rebase', '--abort'); } catch {}
-          fetchOrCreateGhPages(deployDir);
-        }
-      }
+      if (attempt < MAX_RETRIES && tryRebaseAndPush(deployDir, attempt)) return;
     }
   }
   throw new Error(`Deploy failed after ${MAX_RETRIES} attempts`);
@@ -319,8 +322,10 @@ async function deploy() {
   git(deployDir, 'init', '-q');
   git(deployDir, 'config', 'user.name', 'github-actions[bot]');
   git(deployDir, 'config', 'user.email', 'github-actions[bot]@users.noreply.github.com');
-  const remoteUrl = `https://x-access-token:${process.env.GITHUB_TOKEN}@github.com/${process.env.GITHUB_REPOSITORY}.git`;
-  git(deployDir, 'remote', 'add', 'origin', remoteUrl);
+  const repoUrl = `https://github.com/${process.env.GITHUB_REPOSITORY}.git`;
+  git(deployDir, 'remote', 'add', 'origin', repoUrl);
+  const credentials = Buffer.from('x-access-token:' + process.env.GITHUB_TOKEN).toString('base64');
+  git(deployDir, 'config', `http.${repoUrl}.extraHeader`, `Authorization: Basic ${credentials}`);
 
   // Fetch gh-pages
   fetchOrCreateGhPages(deployDir);
@@ -332,7 +337,9 @@ async function deploy() {
   await pushWithRetry(deployDir, publishDir, branchDir, message);
 }
 
-deploy().catch(err => {
+try {
+  await deploy();
+} catch (err) {
   console.error(err.message || err);
   process.exit(1);
-});
+}
