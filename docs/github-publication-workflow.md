@@ -13,10 +13,10 @@ Both workflows produce HTML output under `titles-generated/<branch>/`, then push
 
 | Workflow | Event | Branches | Build Script |
 |---|---|---|---|
-| `build-asciidoc.yml` | `push` | `main`, `release-1.**`, `rhdh-1.**`, `1.**.x` | `build-ccutil.sh` (all branches) |
+| `build-asciidoc.yml` | `push` | `main`, `release-1.**`, `rhdh-1.**`, `1.**.x` | `build-orchestrator.js` |
 | `pr.yml` | `pull_request_target` | `main`, `release-1.**`, `release-2.**` | release-1.9+/main: `build-orchestrator.js`; release-1.8: `build-ccutil.sh` (base branch scripts) |
 
-The `build-asciidoc.yml` workflow uses `build-ccutil.sh` on all branches for the build step. The `pr.yml` workflow detects whether `build-orchestrator.js` exists on the base branch and uses it when available (release-1.9+, main), falling back to `build-ccutil.sh` on older branches (release-1.8). The orchestrator wraps ccutil with parallel execution, lychee link validation, CQA assessment, and JSON reporting.
+The `build-asciidoc.yml` workflow calls `build-orchestrator.js` directly. The `pr.yml` workflow detects whether `build-orchestrator.js` exists on the base branch and uses it when available (release-1.9+, main), falling back to `build-ccutil.sh` on older branches (release-1.8). The orchestrator wraps ccutil with parallel execution, lychee link validation, CQA assessment, and JSON reporting.
 
 ## Security Model
 

@@ -6,7 +6,7 @@ Build, deploy, and content quality tooling for the RHDH documentation project.
 
 | Script | Purpose |
 |---|---|
-| `build-ccutil.sh` | Wrapper that delegates to `build-orchestrator.js`. Used by `build-asciidoc.yml` and as a fallback in `pr.yml` on older branches. |
+| `build-ccutil.sh` | Wrapper that delegates to `build-orchestrator.js`. Used as a fallback in `pr.yml` on older branches and for local builds. |
 | `build-orchestrator.js` | Parallel documentation build orchestrator. Runs ccutil title builds, lychee link validation, and CQA assessment. Produces `build-report.json`. |
 | `deploy-gh-pages.js` | Deploys build output to the `gh-pages` branch. Handles cleanup of stale PR/branch directories, index regeneration with release notes links, and retry with rebase on push conflicts. |
 | `error-patterns.json` | Regex patterns for classifying ccutil build errors into structured messages with cause and fix fields. |
@@ -29,7 +29,7 @@ See `.claude/plugins/project-cqa/resources/cqa-spec.md` for the full specificati
 
 These scripts are called by GitHub Actions workflows in `.github/workflows/`:
 
-- **`build-asciidoc.yml`** (push to main/release) -- `build-ccutil.sh` + `deploy-gh-pages.js`
+- **`build-asciidoc.yml`** (push to main/release) -- `build-orchestrator.js` + `deploy-gh-pages.js`
 - **`pr.yml`** (pull requests) -- `build-orchestrator.js` (or `build-ccutil.sh` on older branches) + `deploy-gh-pages.js`
 
 See `docs/github-publication-workflow.md` for the full architecture documentation.
