@@ -8,8 +8,18 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  *
- * Replaces deploy-gh-pages.sh. Deploys content to the gh-pages branch
- * with retry on push rejection, PR/branch cleanup, and index regeneration.
+ * Deploys build output (titles-generated/) to the gh-pages branch.
+ *
+ * Flow:
+ *   1. Create a temp git repo, fetch gh-pages (shallow)
+ *   2. Copy --publish-dir content into the working tree
+ *   3. For branch deploys: clean up stale PR and branch directories
+ *   4. Regenerate index.html (branch list) and pulls.html (PR list)
+ *   5. Commit everything (content + cleanup + indexes) and push
+ *   6. On push rejection: rebase and retry (max 3 attempts)
+ *
+ * Branch deploys clean up merged/closed PR dirs and deleted branch dirs.
+ * PR deploys only update content and pulls.html — no cleanup.
  *
  * Usage:
  *   node deploy-gh-pages.js --publish-dir <dir> [--message <msg>]
@@ -21,14 +31,9 @@ import { readdirSync, statSync, writeFileSync, existsSync, cpSync, rmSync, mkdte
 import { join, resolve } from 'node:path';
 import { tmpdir } from 'node:os';
 import { execFileSync } from 'node:child_process';
-import { get as httpsGet } from 'node:https';
-
-// ── Constants ────────────────────────────────────────────────────────────────
 
 const MAX_RETRIES = 3;
 const RELEASE_NOTES_BASE = 'https://red-hat-developers-documentation.pages.redhat.com/red-hat-developer-hub-release-notes';
-
-// ── Helpers ──────────────────────────────────────────────────────────────────
 
 function git(cwd, ...args) {
   const result = execFileSync('git', args, { // NOSONAR: git is resolved from PATH in a controlled CI environment
@@ -49,38 +54,26 @@ function noStagedChanges(cwd) {
   }
 }
 
-function getPRState(owner, repo, prNumber) {
-  return new Promise((resolve, reject) => {
-    const options = {
-      hostname: 'api.github.com',
-      path: `/repos/${owner}/${repo}/pulls/${prNumber}`,
+async function getPRState(owner, repo, prNumber) {
+  try {
+    const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/pulls/${prNumber}`, {
       headers: {
         'Authorization': `Bearer ${process.env.GITHUB_TOKEN}`,
         'User-Agent': 'deploy-gh-pages',
         'Accept': 'application/vnd.github+json',
       },
-    };
-    httpsGet(options, (res) => {
-      let data = '';
-      res.on('data', chunk => { data += chunk; });
-      res.on('end', () => {
-        if (res.statusCode !== 200) {
-          console.log(`GitHub API returned ${res.statusCode} for PR ${prNumber}`);
-          resolve('unknown');
-          return;
-        }
-        try {
-          const json = JSON.parse(data);
-          const closedState = json.merged ? 'merged' : 'closed';
-          resolve(json.state === 'closed' ? closedState : 'open');
-        } catch { resolve('unknown'); }
-      });
-      res.on('error', () => resolve('unknown'));
-    }).on('error', () => resolve('unknown'));
-  });
+    });
+    if (!res.ok) {
+      console.log(`GitHub API returned ${res.status} for PR ${prNumber}`);
+      return 'unknown';
+    }
+    const json = await res.json();
+    if (json.state !== 'closed') return 'open';
+    return json.merged ? 'merged' : 'closed';
+  } catch {
+    return 'unknown';
+  }
 }
-
-// ── gh-pages branch setup ────────────────────────────────────────────────────
 
 function fetchOrCreateGhPages(deployDir) {
   try {
@@ -97,20 +90,16 @@ function fetchOrCreateGhPages(deployDir) {
   }
 }
 
-// ── Content application ──────────────────────────────────────────────────────
-
-function applyContent(deployDir, publishDir, branchDir) {
+function applyContent(deployDir, publishDir) {
   cpSync(publishDir, deployDir, { recursive: true });
 }
-
-// ── Cleanup ──────────────────────────────────────────────────────────────────
 
 async function cleanup(deployDir) {
   const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
 
   // PR cleanup: remove directories for merged/closed PRs
   const prDirs = readdirSync(deployDir).filter(d =>
-    d.startsWith('pr-') && !d.startsWith('.') && statSync(join(deployDir, d)).isDirectory()
+    d.startsWith('pr-') && statSync(join(deployDir, d)).isDirectory()
   );
 
   for (const dir of prDirs) {
@@ -141,8 +130,6 @@ async function cleanup(deployDir) {
     }
   }
 }
-
-// ── Index generation ─────────────────────────────────────────────────────────
 
 function getReleaseNotesUrl(branch) {
   if (branch === 'main') return `${RELEASE_NOTES_BASE}/main/index.html`;
@@ -180,19 +167,16 @@ function regenerateIndex(deployDir, branchDir) {
   writeIndex(deployDir, allDirs.filter(d => d.startsWith('pr-')), 'pulls.html', 'PR Previews', true);
 }
 
-// ── Push with retry ──────────────────────────────────────────────────────────
-
-async function stageAndCommit(deployDir, publishDir, branchDir, message) {
-  if (!branchDir.startsWith('pr-')) {
-    await cleanup(deployDir);
-  }
+function stageAndCommit(deployDir, publishDir, branchDir, message) {
   regenerateIndex(deployDir, branchDir);
 
-  const publishEntries = readdirSync(publishDir).filter(e => !e.startsWith('.'));
-  const toStage = [...publishEntries];
-  if (existsSync(join(deployDir, 'index.html'))) toStage.push('index.html');
-  if (existsSync(join(deployDir, 'pulls.html'))) toStage.push('pulls.html');
-  git(deployDir, 'add', '--force', '--', ...new Set(toStage));
+  // Force-add publish entries and index files (.gitignore may exclude them)
+  const forceEntries = new Set(readdirSync(publishDir).filter(e => !e.startsWith('.')));
+  for (const f of ['index.html', 'pulls.html']) {
+    if (existsSync(join(deployDir, f))) forceEntries.add(f);
+  }
+  git(deployDir, 'add', '--force', '--', ...forceEntries);
+  // Stage deletions from cleanup
   git(deployDir, 'add', '-A');
 
   if (noStagedChanges(deployDir)) {
@@ -210,6 +194,9 @@ async function stageAndCommit(deployDir, publishDir, branchDir, message) {
   return true;
 }
 
+// On push rejection (concurrent deploy from another branch/PR), try rebase first.
+// If rebase conflicts (different branch touched same index files), reset and let
+// the retry loop rebuild from a fresh fetch.
 function tryRebaseAndPush(deployDir, attempt) {
   try {
     git(deployDir, 'pull', '--rebase', 'origin', 'gh-pages');
@@ -231,12 +218,17 @@ function tryRebaseAndPush(deployDir, attempt) {
 }
 
 async function pushWithRetry(deployDir, publishDir, branchDir, message) {
+  // Cleanup runs once before retries so we don't make redundant API calls
+  if (!branchDir.startsWith('pr-')) {
+    await cleanup(deployDir);
+  }
+
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     if (attempt > 1) {
-      applyContent(deployDir, publishDir, branchDir);
+      applyContent(deployDir, publishDir);
     }
 
-    const hasChanges = await stageAndCommit(deployDir, publishDir, branchDir, message);
+    const hasChanges = stageAndCommit(deployDir, publishDir, branchDir, message);
     if (!hasChanges) return;
 
     try {
@@ -251,10 +243,7 @@ async function pushWithRetry(deployDir, publishDir, branchDir, message) {
   throw new Error(`Deploy failed after ${MAX_RETRIES} attempts`);
 }
 
-// ── Main ─────────────────────────────────────────────────────────────────────
-
 async function deploy() {
-  // Parse args
   const args = process.argv.slice(2);
   let publishDir = null;
   let message = 'Deploy to GitHub Pages';
@@ -280,7 +269,6 @@ async function deploy() {
 
   publishDir = resolve(publishDir);
 
-  // Validate env
   if (!process.env.GITHUB_TOKEN) {
     console.error('GITHUB_TOKEN is required (set by GitHub Actions)');
     process.exit(1);
@@ -290,7 +278,6 @@ async function deploy() {
     process.exit(1);
   }
 
-  // Detect branchDir from publishDir
   const entries = readdirSync(publishDir).filter(e =>
     !e.startsWith('.') && statSync(join(publishDir, e)).isDirectory()
   );
@@ -305,15 +292,11 @@ async function deploy() {
 
   const branchDir = entries[0];
 
-  // Diagnostics
   console.log(`PUBLISH_DIR: ${publishDir}`);
   console.log('Top-level entries in PUBLISH_DIR:');
-  readdirSync(publishDir)
-    .filter(e => !e.startsWith('.'))
-    .forEach(e => console.log(`  ${e}`));
+  entries.forEach(e => console.log(`  ${e}`));
   console.log(`Branch directory: ${branchDir}`);
 
-  // Create temp git repo
   const deployDir = mkdtempSync(join(tmpdir(), 'deploy-'));
   process.on('exit', () => {
     try { rmSync(deployDir, { recursive: true, force: true }); } catch {}
@@ -322,18 +305,15 @@ async function deploy() {
   git(deployDir, 'init', '-q');
   git(deployDir, 'config', 'user.name', 'github-actions[bot]');
   git(deployDir, 'config', 'user.email', 'github-actions[bot]@users.noreply.github.com');
+  // Auth via http.extraHeader keeps the token out of the remote URL (avoids leaking in logs)
   const repoUrl = `https://github.com/${process.env.GITHUB_REPOSITORY}.git`;
   git(deployDir, 'remote', 'add', 'origin', repoUrl);
   const credentials = Buffer.from('x-access-token:' + process.env.GITHUB_TOKEN).toString('base64');
   git(deployDir, 'config', `http.${repoUrl}.extraHeader`, `Authorization: Basic ${credentials}`);
 
-  // Fetch gh-pages
   fetchOrCreateGhPages(deployDir);
 
-  // Apply content on first pass
-  applyContent(deployDir, publishDir, branchDir);
-
-  // Push with retry handles cleanup, index regeneration, staging, commit, and push
+  applyContent(deployDir, publishDir);
   await pushWithRetry(deployDir, publishDir, branchDir, message);
 }
 
