@@ -7,7 +7,7 @@ The RHDH documentation project uses GitHub Actions to build AsciiDoc documentati
 - **`build-asciidoc.yml`** -- triggered on branch pushes, builds and deploys production documentation.
 - **`pr.yml`** -- triggered on pull requests, builds preview HTML and posts a PR comment with a preview link and CQA checklist.
 
-Both workflows produce HTML output under `titles-generated/<branch>/`, then push the result to the `gh-pages` branch using `deploy-gh-pages.js`.
+Both workflows produce HTML output under `titles-generated/<branch>/`, then push the result to the `gh-pages` branch using `deploy-gh-pages.sh`.
 
 ## Triggers and Branch Matrix
 
@@ -76,7 +76,7 @@ The `-b` flag determines the output directory name under `titles-generated/`. `-
 
 ## Deploy Pipeline
 
-### deploy-gh-pages.js
+### deploy-gh-pages.sh
 
 Handles deployment of built content to the `gh-pages` branch, including cleanup and index regeneration in a single commit.
 
@@ -102,10 +102,10 @@ Branch deploys regenerate both indexes. PR deploys regenerate `pulls.html` only.
 
 ```bash
 # Branch deploy
-node build/scripts/deploy-gh-pages.js --publish-dir ./titles-generated --message "Deploy main"
+bash build/scripts/deploy-gh-pages.sh --publish-dir ./titles-generated --message "Deploy main"
 
 # PR deploy (from pr.yml, using trusted scripts)
-node trusted-scripts/build/scripts/deploy-gh-pages.js --publish-dir ./pr-content/titles-generated --message "Deploy PR 123 preview"
+bash trusted-scripts/build/scripts/deploy-gh-pages.sh --publish-dir ./pr-content/titles-generated --message "Deploy PR 123 preview"
 ```
 
 ### Branch vs PR deploys
@@ -148,7 +148,7 @@ https://redhat-developer.github.io/red-hat-developers-documentation-rhdh/pr-<N>/
 2. Authorization gate checks team membership. Fork PRs from non-team members require manual approval via the `external` environment.
 3. Trusted build scripts are checked out from the base branch. PR content is checked out separately.
 4. Build scripts from the base replace `pr-content/build/scripts`. The orchestrator (or `build-ccutil.sh` on older branches) runs with `-b pr-<N>`.
-5. If HTML was successfully generated (checked via `build-report.json`), `deploy-gh-pages.js` pushes the output to `gh-pages` under `pr-<N>/`.
+5. If HTML was successfully generated (checked via `build-report.json`), `deploy-gh-pages.sh` pushes the output to `gh-pages` under `pr-<N>/`.
 6. A consolidated PR comment is posted (or updated) with:
    - Build status (passed/failed) with title counts and duration.
    - Preview link (marked stale if title build failed).
@@ -162,7 +162,7 @@ https://redhat-developer.github.io/red-hat-developers-documentation-rhdh/pr-<N>/
 
 ## Cleanup
 
-Cleanup is integrated into `deploy-gh-pages.js` and runs during branch deploys only, not during PR deploys. It executes before index regeneration so indexes reflect the cleaned-up state. Cleanup, content deployment, and index regeneration are committed together in a single commit.
+Cleanup is integrated into `deploy-gh-pages.sh` and runs during branch deploys only, not during PR deploys. It executes before index regeneration so indexes reflect the cleaned-up state. Cleanup, content deployment, and index regeneration are committed together in a single commit.
 
 ### PR cleanup
 
