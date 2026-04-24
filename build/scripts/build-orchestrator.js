@@ -16,7 +16,6 @@ import { resolve, dirname, join } from 'node:path';
 import { spawn } from 'node:child_process';
 import { cpus } from 'node:os';
 import { fileURLToPath } from 'node:url';
-import { get as httpsGet } from 'node:https';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
@@ -437,51 +436,6 @@ function generateBranchIndex(branch, results, repoRoot) {
   writeFileSync(join(indexDir, 'index.html'), html);
 }
 
-function fetchUrl(url) {
-  return new Promise((resolve, reject) => {
-    httpsGet(url, (res) => {
-      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-        fetchUrl(res.headers.location).then(resolve, reject);
-        return;
-      }
-      if (res.statusCode !== 200) {
-        res.resume();
-        reject(new Error(`HTTP ${res.statusCode}`));
-        return;
-      }
-      let data = '';
-      res.on('data', (chunk) => { data += chunk; });
-      res.on('end', () => resolve(data));
-      res.on('error', reject);
-    }).on('error', reject);
-  });
-}
-
-async function updateRootIndex(branch, repoRoot) {
-  const isPR = branch.startsWith('pr-');
-  const indexFile = isPR ? 'pulls.html' : 'index.html';
-  const indexPath = join(repoRoot, 'titles-generated', indexFile);
-  const url = `${PAGES_BASE}/${indexFile}`;
-
-  // Fetch existing index from GitHub Pages
-  try {
-    const data = await fetchUrl(url);
-    writeFileSync(indexPath, data);
-  } catch {
-    // If fetch fails, create a minimal file
-    writeFileSync(indexPath, '<html><body><ul>\n</ul></body></html>');
-  }
-
-  const content = readFileSync(indexPath, 'utf8');
-  const link = `./${branch}/index.html`;
-  if (!content.includes(link)) {
-    console.log(`Building root index for ${branch} in titles-generated/${indexFile} ...`);
-    const entry = `<li><a href=${link}>${branch}</a></li>`;
-    const updated = content.replace('</ul>', `${entry}\n</ul>`);
-    writeFileSync(indexPath, updated);
-  }
-}
-
 // ── Summary output ───────────────────────────────────────────────────────────
 
 function printFailedTitle(r) {
@@ -653,9 +607,6 @@ async function main() {
   // Generate branch index HTML (only for passed titles)
   generateBranchIndex(args.branch, buildResults, repoRoot);
 
-  // Update root index
-  await updateRootIndex(args.branch, repoRoot);
-
   // Run lychee link validation
   console.log('\nRunning link validation (lychee)...');
   const lycheeResult = await runLychee(repoRoot, args.branch, args.verbose);
@@ -664,20 +615,22 @@ async function main() {
   }
 
   // Run CQA content quality assessment
-  // Skip when CQA_RUNNING env is set (CQA-14 recursion guard)
-  const cqaResult = (process.env.CQA_RUNNING)
-    ? { status: 'skipped', duration: 0, output: '', stats: { total: 0, pass: 0, fail: 0 } }
-    : await (async () => {
-        console.log('\nRunning CQA content quality assessment...');
-        return runCqa(repoRoot, args.verbose);
-      })();
+  let cqaResult;
+  if (process.env.CQA_RUNNING) {
+    cqaResult = { status: 'skipped', duration: 0, output: '', stats: { total: 0, pass: 0, fail: 0 } };
+  } else {
+    // Write preliminary report so CQA-14 can read lychee results without rebuilding
+    const pendingCqa = { status: 'pending', duration: 0, output: '', stats: { total: 0, pass: 0, fail: 0 } };
+    writeReport(args.branch, buildResults, lycheeResult, pendingCqa, args.jobs, 0, repoRoot);
+
+    console.log('\nRunning CQA content quality assessment...');
+    process.env.CQA_RUNNING = '1';
+    cqaResult = await runCqa(repoRoot, args.verbose);
+    delete process.env.CQA_RUNNING;
+  }
 
   const totalDuration = Math.round((Date.now() - totalStart) / 1000);
-
-  // Print summary
   printSummary(buildResults, lycheeResult, cqaResult, patterns, totalDuration);
-
-  // Write JSON report
   writeReport(args.branch, buildResults, lycheeResult, cqaResult, args.jobs, totalDuration, repoRoot);
 
   // Exit with error if any builds, lychee, or CQA failed
