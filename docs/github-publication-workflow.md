@@ -13,10 +13,10 @@ Both workflows produce HTML output under `titles-generated/<branch>/`, then push
 
 | Workflow | Event | Branches | Build Script |
 |---|---|---|---|
-| `build-asciidoc.yml` | `push` | `main`, `release-1.**`, `rhdh-1.**`, `1.**.x` | `build-orchestrator.js` |
+| `build-asciidoc.yml` | `push` | `main`, `release-1.**`, `rhdh-1.**`, `1.**.x` | `build-orchestrator.js --no-cqa` |
 | `pr.yml` | `pull_request_target` | `main`, `release-1.**`, `release-2.**` | release-1.9+/main: `build-orchestrator.js`; release-1.8: `build-ccutil.sh` (base branch scripts) |
 
-The `build-asciidoc.yml` workflow calls `build-orchestrator.js` directly. The `pr.yml` workflow detects whether `build-orchestrator.js` exists on the base branch and uses it when available (release-1.9+, main), falling back to `build-ccutil.sh` on older branches (release-1.8). The orchestrator wraps ccutil with parallel execution, lychee link validation, CQA assessment, and JSON reporting.
+The `build-asciidoc.yml` workflow calls `build-orchestrator.js --no-cqa` (CQA results aren't surfaced in branch builds, only in PR comments). The `pr.yml` workflow detects whether `build-orchestrator.js` exists on the base branch and uses it when available (release-1.9+, main), falling back to `build-ccutil.sh` on older branches (release-1.8). The orchestrator wraps ccutil with parallel execution, lychee link validation, CQA assessment, and JSON reporting.
 
 ## Security Model
 
@@ -69,9 +69,10 @@ The orchestrator replaces the sequential `build-ccutil.sh` with parallel title b
 node build/scripts/build-orchestrator.js -b <branch>
 node build/scripts/build-orchestrator.js -b pr-123 --verbose
 node build/scripts/build-orchestrator.js -b main --jobs 4
+node build/scripts/build-orchestrator.js -b main --no-cqa --no-lychee
 ```
 
-The `-b` flag determines the output directory name under `titles-generated/`. The orchestrator exits with code 1 if any title build, lychee, or CQA fails.
+The `-b` flag determines the output directory name under `titles-generated/`. `--no-cqa` and `--no-lychee` skip CQA and lychee respectively (used by `build-asciidoc.yml` where CQA results aren't surfaced). The orchestrator exits with code 1 if any enabled phase fails.
 
 ## Deploy Pipeline
 

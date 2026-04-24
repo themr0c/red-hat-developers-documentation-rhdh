@@ -51,7 +51,7 @@ to modularize your content.
 * link:https://podman.io[Podman]
 * link:https://github.com/errata-ai/vale[Vale]
 * link:https://github.com/lycheeverse/lychee[Lychee] (downloaded automatically by the build script if not installed)
-* Optional: A `GITHUB_TOKEN` environment variable to avoid GitHub API rate limiting during lychee link validation. Use link:https://cli.github.com[GitHub CLI] (`gh`) to get and refresh the token: `export GITHUB_TOKEN=$(gh auth token)`
+* Optional for local builds: A `GITHUB_TOKEN` environment variable to avoid GitHub API rate limiting during lychee link validation. Use link:https://cli.github.com[GitHub CLI] (`gh`) to get and refresh the token: `export GITHUB_TOKEN=$(gh auth token)`. This token is required in CI for deployment to `gh-pages`.
 
 .Procedure
 
