@@ -20,7 +20,7 @@
 # Branch deploys clean up merged/closed PR dirs and deleted branch dirs.
 # PR deploys only update content and pulls.html — no cleanup.
 #
-# Usage: deploy-gh-pages.sh --publish-dir <dir> [--message <msg>]
+# Usage: deploy-gh-pages.sh <publish_dir> [--message <msg>]
 #
 # Environment: GITHUB_TOKEN, GITHUB_REPOSITORY (set by GitHub Actions)
 
@@ -31,21 +31,16 @@ RELEASE_NOTES_BASE="https://red-hat-developers-documentation.pages.redhat.com/re
 
 # ── Parse arguments ──────────────────────────────────────────────────────────
 
-PUBLISH_DIR=""
-COMMIT_MSG="Deploy to GitHub Pages"
+PUBLISH_DIR="${1:?Usage: deploy-gh-pages.sh <publish_dir> [--message <msg>]}"
+shift
 
+COMMIT_MSG="Deploy to GitHub Pages"
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --publish-dir) PUBLISH_DIR="$2"; shift 2 ;;
     --message) COMMIT_MSG="$2"; shift 2 ;;
     *) echo "Unknown option: $1" >&2; exit 1 ;;
   esac
 done
-
-if [[ -z "$PUBLISH_DIR" ]]; then
-  echo "Usage: deploy-gh-pages.sh --publish-dir <dir> [--message <msg>]" >&2
-  exit 1
-fi
 
 PUBLISH_DIR="$(cd "$PUBLISH_DIR" && pwd)"
 : "${GITHUB_TOKEN:?GITHUB_TOKEN is required}"
