@@ -81,15 +81,9 @@ git -C "$DEPLOY_DIR" config "http.${REPO_URL}.extraHeader" "Authorization: Basic
 
 # ── Core functions ───────────────────────────────────────────────────────────
 
-# gh-pages exists in practice; orphan path is a bootstrap safety net
 fetch_gh_pages() {
-  if git -C "$DEPLOY_DIR" fetch origin gh-pages --depth=1 2>/dev/null; then
-    git -C "$DEPLOY_DIR" checkout -B gh-pages FETCH_HEAD
-  else
-    echo "gh-pages branch does not exist, creating orphan"
-    git -C "$DEPLOY_DIR" checkout --orphan gh-pages
-    git -C "$DEPLOY_DIR" rm -rf . 2>/dev/null || true
-  fi
+  git -C "$DEPLOY_DIR" fetch origin gh-pages --depth=1
+  git -C "$DEPLOY_DIR" checkout -B gh-pages FETCH_HEAD
 }
 
 apply_content() {

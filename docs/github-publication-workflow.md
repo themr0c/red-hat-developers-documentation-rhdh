@@ -84,7 +84,7 @@ Handles deployment of built content to the `gh-pages` branch, including cleanup 
 
 1. Detect the branch directory from `<publish_dir>` (single top-level directory, e.g., `main/`, `pr-123/`).
 2. Create a temporary git repo with `github-actions[bot]` identity.
-3. Fetch `gh-pages` (shallow, depth=1) or create an orphan if it does not exist.
+3. Fetch `gh-pages` (shallow, depth=1).
 4. Copy `<publish_dir>` contents into the working tree.
 5. For branch deploys: run cleanup (see Cleanup section below).
 6. Regenerate indexes from current directories on `gh-pages` (see below).
