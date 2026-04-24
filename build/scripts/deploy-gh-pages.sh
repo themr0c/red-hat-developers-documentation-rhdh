@@ -84,10 +84,12 @@ git -C "$DEPLOY_DIR" config "http.${REPO_URL}.extraHeader" "Authorization: Basic
 fetch_gh_pages() {
   git -C "$DEPLOY_DIR" fetch origin gh-pages --depth=1
   git -C "$DEPLOY_DIR" checkout -B gh-pages FETCH_HEAD
+  return 0
 }
 
 apply_content() {
   cp -a "$PUBLISH_DIR"/. "$DEPLOY_DIR"/
+  return 0
 }
 
 # ── Cleanup (branch deploys only) ────────────────────────────────────────────
@@ -144,6 +146,7 @@ cleanup() {
       rm -rf "$d"
     fi
   done
+  return 0
 }
 
 # ── Index generation ─────────────────────────────────────────────────────────
@@ -159,6 +162,7 @@ release_notes_url() {
       echo "${RELEASE_NOTES_BASE}/release-${major}-${minor}/index.html"
     fi
   fi
+  return 0
 }
 
 regenerate_indexes() {
@@ -199,6 +203,7 @@ EOF
 ${pr_items}</ul>
 </body></html>
 EOF
+  return 0
 }
 
 # ── Stage, commit, push ─────────────────────────────────────────────────────
