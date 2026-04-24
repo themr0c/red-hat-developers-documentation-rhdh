@@ -74,4 +74,4 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.RHDH_BOT_TOKEN }}
         GITHUB_REPOSITORY: ${{ github.repository }}
-      run: node build/scripts/deploy-gh-pages.js --publish-dir ./titles-generated --message "Deploy ${{ env.GIT_BRANCH }}"
+      run: bash build/scripts/deploy-gh-pages.sh --publish-dir ./titles-generated --message "Deploy ${{ env.GIT_BRANCH }}"
