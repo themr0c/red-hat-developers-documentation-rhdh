@@ -135,15 +135,17 @@ cleanup() {
     fi
   done
 
-  # Branch cleanup: remove directories for deleted remote branches (rhdh-*, 1.*.x, etc.)
-  # No pattern list needed — we check if each branch still exists on the remote
+  # Branch cleanup: remove directories for deleted remote branches
+  local remote_branches
+  remote_branches="$(git -C "$DEPLOY_DIR" ls-remote --heads origin 2>/dev/null | awk '{print $2}' | sed 's|refs/heads/||')"
+
   for d in "$DEPLOY_DIR"/*/; do
     [[ -d "$d" ]] || continue
     local dir_name
     dir_name="$(basename "$d")"
     [[ "$dir_name" == pr-* || "$dir_name" == .* ]] && continue
 
-    if ! git -C "$DEPLOY_DIR" ls-remote --heads origin "$dir_name" 2>/dev/null | grep -q .; then
+    if ! grep -qx "$dir_name" <<< "$remote_branches"; then
       echo "Removing $dir_name (branch no longer exists on remote)"
       rm -rf "$d"
     fi
@@ -152,6 +154,7 @@ cleanup() {
 
 # ── Index generation ─────────────────────────────────────────────────────────
 
+# See also: getReleaseNotesLink() in build-orchestrator.js (per-title links)
 release_notes_url() {
   local branch="$1"
   if [[ "$branch" == "main" ]]; then
