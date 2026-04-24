@@ -86,6 +86,7 @@ git -C "$DEPLOY_DIR" config "http.${REPO_URL}.extraHeader" "Authorization: Basic
 
 # ── Core functions ───────────────────────────────────────────────────────────
 
+# gh-pages exists in practice; orphan path is a bootstrap safety net
 fetch_gh_pages() {
   if git -C "$DEPLOY_DIR" fetch origin gh-pages --depth=1 2>/dev/null; then
     git -C "$DEPLOY_DIR" checkout -B gh-pages FETCH_HEAD
@@ -139,7 +140,8 @@ cleanup() {
     fi
   done
 
-  # Branch cleanup: remove directories for deleted remote branches
+  # Branch cleanup: remove directories for deleted remote branches (rhdh-*, 1.*.x, etc.)
+  # No pattern list needed — we check if each branch still exists on the remote
   for d in "$DEPLOY_DIR"/*/; do
     [[ -d "$d" ]] || continue
     local dir_name
