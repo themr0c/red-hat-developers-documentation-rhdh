@@ -68,7 +68,7 @@ jobs:
       run: |
         echo "Building branch ${{ env.GIT_BRANCH }}"
         touch .lycheecache
-        node build/scripts/build-orchestrator.js -b ${{ env.GIT_BRANCH }}
+        node build/scripts/build-orchestrator.js -b ${{ env.GIT_BRANCH }} --no-cqa
 
     - name: Deploy to the gh-pages branch
       env:

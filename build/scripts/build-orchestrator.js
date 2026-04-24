@@ -9,6 +9,7 @@
  *   node build/scripts/build-orchestrator.js -b main
  *   node build/scripts/build-orchestrator.js -b pr-123 --verbose
  *   node build/scripts/build-orchestrator.js -b main --jobs 4
+ *   node build/scripts/build-orchestrator.js -b main --no-cqa --no-lychee
  */
 
 import { existsSync, readFileSync, writeFileSync, mkdirSync, rmSync, readdirSync, renameSync, copyFileSync } from 'node:fs';
@@ -31,12 +32,14 @@ const SAFE_PATH = '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
 // ── Argument parsing ─────────────────────────────────────────────────────────
 
 function parseArgs(argv) {
-  const args = { branch: 'main', verbose: false, jobs: cpus().length };
+  const args = { branch: 'main', verbose: false, jobs: cpus().length, lychee: true, cqa: true };
   for (let i = 2; i < argv.length; i++) {
     switch (argv[i]) {
       case '-b': args.branch = argv[++i]; break;
       case '--verbose': args.verbose = true; break;
       case '--jobs': args.jobs = Number.parseInt(argv[++i], 10); break;
+      case '--no-lychee': args.lychee = false; break;
+      case '--no-cqa': args.cqa = false; break;
     }
   }
   return args;
@@ -608,16 +611,25 @@ async function main() {
   generateBranchIndex(args.branch, buildResults, repoRoot);
 
   // Run lychee link validation
-  console.log('\nRunning link validation (lychee)...');
-  const lycheeResult = await runLychee(repoRoot, args.branch, args.verbose);
-  if (lycheeResult.errors.length === 0) {
-    lycheeResult.errors = classifyErrors(lycheeResult.output, patterns);
+  const skippedResult = { status: 'skipped', duration: 0, output: '', stats: { total: 0, successful: 0, errors: 0, excludes: 0, timeouts: 0 }, errors: [] };
+  let lycheeResult;
+  if (args.lychee) {
+    console.log('\nRunning link validation (lychee)...');
+    lycheeResult = await runLychee(repoRoot, args.branch, args.verbose);
+    if (lycheeResult.errors.length === 0) {
+      lycheeResult.errors = classifyErrors(lycheeResult.output, patterns);
+    }
+  } else {
+    console.log('\nSkipping link validation (--no-lychee)');
+    lycheeResult = { ...skippedResult };
   }
 
   // Run CQA content quality assessment
+  const skippedCqa = { status: 'skipped', duration: 0, output: '', stats: { total: 0, pass: 0, fail: 0 } };
   let cqaResult;
-  if (process.env.CQA_RUNNING) {
-    cqaResult = { status: 'skipped', duration: 0, output: '', stats: { total: 0, pass: 0, fail: 0 } };
+  if (!args.cqa || process.env.CQA_RUNNING) {
+    if (!args.cqa) console.log('\nSkipping CQA (--no-cqa)');
+    cqaResult = skippedCqa;
   } else {
     // Write preliminary report so CQA-14 can read lychee results without rebuilding
     const pendingCqa = { status: 'pending', duration: 0, output: '', stats: { total: 0, pass: 0, fail: 0 } };

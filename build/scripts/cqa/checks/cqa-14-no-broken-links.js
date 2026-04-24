@@ -89,16 +89,21 @@ function getLycheeIssues(root) {
   _lycheeIssuesCache = [];
 
   if (!process.env.CQA_RUNNING) {
-    // Standalone mode: build current state to get lychee results
+    // Standalone mode: build current state to get lychee results.
+    // Detect current branch for correct output directory naming and link remapping.
+    let branch = 'main';
     try {
-      execFileSync('node', ['build/scripts/build-orchestrator.js', '-b', 'main'], { // NOSONAR — fixed args, no user input
+      branch = execFileSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim();
+    } catch { /* fall back to main */ }
+    try {
+      execFileSync('node', ['build/scripts/build-orchestrator.js', '-b', branch, '--no-cqa'], { // NOSONAR — fixed args, no user input
         cwd: root,
         stdio: 'pipe',
         timeout: 600000,
         env: { ...process.env, CQA_RUNNING: '1' },
       });
     } catch {
-      // Build may exit non-zero if lychee finds broken links — that's expected
+      // Orchestrator exits non-zero when lychee finds broken links; the report is still written
     }
   }
   // When CQA_RUNNING is set: preliminary report already exists with lychee results
