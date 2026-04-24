@@ -195,7 +195,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.RHDH_BOT_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
-        run: bash trusted-scripts/build/scripts/deploy-gh-pages.sh --publish-dir ./pr-content/titles-generated --message "Deploy PR ${{ github.event.number }} preview"
+        run: bash trusted-scripts/build/scripts/deploy-gh-pages.sh ./pr-content/titles-generated --message "Deploy PR ${{ github.event.number }} preview"
 
       # Post one consolidated PR comment with build results, preview link, and CQA checklist.
       # Preview link is always shown; marked stale when title build failed (HTML not generated).
