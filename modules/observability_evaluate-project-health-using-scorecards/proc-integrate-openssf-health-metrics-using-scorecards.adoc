@@ -19,7 +19,7 @@ The module uses the public OpenSSF Scorecard API, which requires no authenticati
 
 .Procedure
 
-. Enable the OpenSSF Scorecard module: Add the OpenSSF Scorecard module to your {product-very-short} `dynamic-plugins-config.yaml` file:
+. Enable the OpenSSF Scorecard module: Add the following configuration to your {product-very-short} `dynamic-plugins-config.yaml` file:
 +
 [source,yaml]
 ----
@@ -46,8 +46,8 @@ spec:
 +
 where:
 
-`annotations:openssf/scorecard-location`:: The full URL to the OpenSSF Scorecard API endpoint for the repository. The URL must start with `https://`.
-`spec:owner`:: Your team name.
+`annotations:openssf/scorecard-location`:: Specifies the full URL to the OpenSSF Scorecard API endpoint for the repository. The URL must start with `https://`.
+`spec:owner`:: Specifies your team name.
 +
 [NOTE]
 ====
@@ -76,7 +76,7 @@ metadata:
 +
 where:
 
-`scorecard.io/exclude_metrics`:: A comma-separated list of metric IDs to exclude for this entity.
+`scorecard.io/exclude_metrics`:: Specifies a comma-separated list of metric IDs to exclude for this entity.
 
 . Optional: Exclude or include metrics globally: To exclude or include specific metrics across all entities, add the following configuration to your {product-very-short} `{my-app-config-file}` file:
 +
@@ -91,8 +91,8 @@ scorecard:
 +
 where:
 
-`exclude_metrics`:: A list of metric IDs to exclude globally.
-`include_metrics`:: A list of metric IDs to include. When set, only listed metrics are displayed.
+`exclude_metrics`:: Specifies a list of metric IDs to exclude globally.
+`include_metrics`:: Specifies a list of metric IDs to include. When set, only listed metrics are displayed.
 
 . Optional: Enable or disable the OpenSSF metric provider: To control which metric providers are active, add the following configuration to your {product-very-short} `{my-app-config-file}` file:
 +

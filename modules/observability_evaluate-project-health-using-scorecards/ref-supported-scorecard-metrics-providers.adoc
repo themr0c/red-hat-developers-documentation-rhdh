@@ -119,7 +119,7 @@ The following metric providers are supported:
 
 | OpenSSF
 | `openssf.sast`
-| SAST
+| SAST (Static Analysis Security Testing)
 | Determines if the project uses static code analysis.
 | score (0-10)
 | Fixed
