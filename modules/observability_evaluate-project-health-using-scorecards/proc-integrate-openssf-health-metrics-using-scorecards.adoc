@@ -37,7 +37,6 @@ kind: Component
 metadata:
   name: my-service
   annotations:
-    # Required: Full URL to the OpenSSF Scorecard API for this repository
     openssf/scorecard-location: https://api.securityscorecards.dev/projects/github.com/_<owner>_/_<repository>_
 spec:
   type: service
