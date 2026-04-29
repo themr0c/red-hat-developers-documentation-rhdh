@@ -1,6 +1,6 @@
 :_mod-docs-content-type: PROCEDURE
 
-[id="integrate-openssf-health-metrics-using-scorecards_{context}"]
+[id="integrate-openssf-security-metrics-using-scorecards_{context}"]
 = Integrate OpenSSF security metrics using Scorecards
 
 include::{docdir}/artifacts/snip-developer-preview-scorecard.adoc[]
@@ -8,14 +8,14 @@ include::{docdir}/artifacts/snip-developer-preview-scorecard.adoc[]
 [role="_abstract"]
 You can configure the OpenSSF Scorecard module to display security and compliance metrics from the https://scorecard.dev[OpenSSF Scorecard] project in your {product-very-short} catalog.
 
-The module uses the public OpenSSF Scorecard API, which requires no authentication. Only public GitHub repositories are supported.
+By default, the module fetches data from the public OpenSSF Scorecard API, which requires no authentication and supports public GitHub repositories. Alternatively, the annotation can point to any HTTPS endpoint that serves OpenSSF Scorecard JSON data, such as a self-hosted instance or a static file.
 
 .Prerequisites
 
 * You have {install-category-link}[installed your {product-very-short} instance].
 * You have {scorecard-plugin-book-link}#set-up-scorecards-to-monitor-your-project-health_{context}[set up the Scorecard plugin].
 * You have {configuring-book-link}[added a custom {product-short} application configuration].
-* The target repositories are publicly accessible on GitHub.
+* The target repositories are publicly accessible on GitHub, or you have an alternative HTTPS endpoint that serves OpenSSF Scorecard JSON data.
 
 .Procedure
 
@@ -106,11 +106,9 @@ scorecard:
 +
 [IMPORTANT]
 ====
-OpenSSF metrics use fixed, non-configurable thresholds:
+OpenSSF metrics use fixed, non-configurable thresholds. Unlike GitHub and Jira metrics, you cannot customize these thresholds.
 
-* *Error*: score below 2
-* *Warning*: score between 2 and 7
-* *Success*: score above 7
-
-Unlike GitHub and Jira metrics, you cannot customize these thresholds.
+Error:: Score below 2.
+Warning:: Score between 2 and 7.
+Success:: Score above 7.
 ====
