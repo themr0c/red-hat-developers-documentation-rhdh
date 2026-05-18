@@ -73,7 +73,7 @@
 `GITLAB_HOST`
 
 
-|Global Floating Action Button |`https://npmjs.com/package/@red-hat-developer-hub/backstage-plugin-global-floating-action-button/v/1.9.1[@red-hat-developer-hub/backstage-plugin-global-floating-action-button]` |1.9.1 
+|Global Floating Action Button |`https://npmjs.com/package/@red-hat-developer-hub/backstage-plugin-global-floating-action-button/v/1.9.2[@red-hat-developer-hub/backstage-plugin-global-floating-action-button]` |1.9.2 
 |`./dynamic-plugins/dist/red-hat-developer-hub-backstage-plugin-global-floating-action-button`
 
 
@@ -145,11 +145,11 @@
 `LOKI_BASE_URL`
 
 
-|Orchestrator Form Widgets |`https://npmjs.com/package/@red-hat-developer-hub/backstage-plugin-orchestrator-form-widgets/v/1.10.4[@red-hat-developer-hub/backstage-plugin-orchestrator-form-widgets]` |1.10.4 
+|Orchestrator Form Widgets |`https://npmjs.com/package/@red-hat-developer-hub/backstage-plugin-orchestrator-form-widgets/v/1.10.6[@red-hat-developer-hub/backstage-plugin-orchestrator-form-widgets]` |1.10.6 
 |`oci://registry.access.redhat.com/rhdh/red-hat-developer-hub-backstage-plugin-orchestrator-form-widgets@sha256:b8d9886e39fa1262bfe1046f6ec5825b8e576c4997c744e0f90f722453f35aec`
 
 
-|Orchestrator |`https://npmjs.com/package/@red-hat-developer-hub/backstage-plugin-orchestrator/v/5.7.9[@red-hat-developer-hub/backstage-plugin-orchestrator]` |5.7.9 
+|Orchestrator |`https://npmjs.com/package/@red-hat-developer-hub/backstage-plugin-orchestrator/v/5.7.10[@red-hat-developer-hub/backstage-plugin-orchestrator]` |5.7.10 
 |`oci://registry.access.redhat.com/rhdh/red-hat-developer-hub-backstage-plugin-orchestrator@sha256:062a536d266bcd76d454fc9fdc0157b99e62074f6d3304578a68f515ced83e64`
 
 
@@ -161,7 +161,7 @@
 |`oci://registry.access.redhat.com/rhdh/red-hat-developer-hub-backstage-plugin-scaffolder-backend-module-orchestrator@sha256:5b52adc153afcf79fb134262aa01b1e117085bf59c1a1997ff2e3a6f31c7647a`
 
 
-|Quickstart |`https://npmjs.com/package/@red-hat-developer-hub/backstage-plugin-quickstart/v/1.9.3[@red-hat-developer-hub/backstage-plugin-quickstart]` |1.9.3 
+|Quickstart |`https://npmjs.com/package/@red-hat-developer-hub/backstage-plugin-quickstart/v/1.9.4[@red-hat-developer-hub/backstage-plugin-quickstart]` |1.9.4 
 |`./dynamic-plugins/dist/red-hat-developer-hub-backstage-plugin-quickstart`
 
 
