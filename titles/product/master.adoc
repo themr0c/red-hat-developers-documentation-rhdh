@@ -1,0 +1,32 @@
+:_mod-docs-content-type: ASSEMBLY
+:_mod-docs-category: Product
+
+include::artifacts/attributes.adoc[]
+
+:title: {product} documentation
+:context: product
+
+[id="{context}"]
+= {title}
+
+include::maps/get-started.adoc[leveloffset=+1]
+
+include::maps/discover.adoc[leveloffset=+1]
+
+include::maps/install.adoc[leveloffset=+1]
+
+include::maps/configure.adoc[leveloffset=+1]
+
+include::maps/control-access.adoc[leveloffset=+1]
+
+include::maps/integrate.adoc[leveloffset=+1]
+
+include::maps/extend.adoc[leveloffset=+1]
+
+include::maps/develop.adoc[leveloffset=+1]
+
+include::maps/observability.adoc[leveloffset=+1]
+
+include::maps/upgrade.adoc[leveloffset=+1]
+
+include::maps/additional.adoc[leveloffset=+1]

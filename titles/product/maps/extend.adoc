@@ -1,0 +1,13 @@
+= Extend
+
+include::../../extend_configuring-dynamic-plugins/master.adoc[leveloffset=+1]
+
+include::../../extend_develop-and-deploy-plugins-in-rhdh/master.adoc[leveloffset=+1]
+
+include::../../extend_dynamic-plugins-reference/master.adoc[leveloffset=+1]
+
+include::../../extend_installing-and-viewing-plugins-in-rhdh/master.adoc[leveloffset=+1]
+
+include::../../extend_orchestrator-in-rhdh/master.adoc[leveloffset=+1]
+
+include::../../extend_using-dynamic-plugins-in-rhdh/master.adoc[leveloffset=+1]

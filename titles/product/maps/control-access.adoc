@@ -1,0 +1,5 @@
+= Control access
+
+include::../../control-access_authentication-in-rhdh/master.adoc[leveloffset=+1]
+
+include::../../control-access_authorization-in-rhdh/master.adoc[leveloffset=+1]

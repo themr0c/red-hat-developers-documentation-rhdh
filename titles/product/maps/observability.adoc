@@ -1,0 +1,11 @@
+= Observability
+
+include::../../observability_adoption-insights-in-rhdh/master.adoc[leveloffset=+1]
+
+include::../../observability_audit-logs-in-rhdh/master.adoc[leveloffset=+1]
+
+include::../../observability_evaluate-project-health-using-scorecards/master.adoc[leveloffset=+1]
+
+include::../../observability_monitoring-and-logging/master.adoc[leveloffset=+1]
+
+include::../../observability_telemetry-data-collection-and-analysis/master.adoc[leveloffset=+1]

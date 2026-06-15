@@ -1,0 +1,9 @@
+= Configure
+
+include::../../configure_configuring-rhdh/master.adoc[leveloffset=+1]
+
+include::../../configure_customizing-rhdh/master.adoc[leveloffset=+1]
+
+include::../../configure_helm-chart-config-reference/master.adoc[leveloffset=+1]
+
+include::../../configure_techdocs-for-rhdh/master.adoc[leveloffset=+1]

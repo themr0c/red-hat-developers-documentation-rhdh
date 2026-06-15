@@ -1,0 +1,3 @@
+= Upgrade
+
+include::../../upgrade_upgrade-rhdh/master.adoc[leveloffset=+1]

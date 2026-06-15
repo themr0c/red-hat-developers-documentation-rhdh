@@ -1,0 +1,5 @@
+= Get started
+
+include::../../get-started_navigate-rhdh-on-your-first-day/master.adoc[leveloffset=+1]
+
+include::../../get-started_setting-up-and-configuring-your-first-red-hat-developer-hub-instance/master.adoc[leveloffset=+1]

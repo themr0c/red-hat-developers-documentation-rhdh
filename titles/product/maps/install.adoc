@@ -1,0 +1,13 @@
+= Install
+
+include::../../install_installing-rhdh-in-an-air-gapped-environment/master.adoc[leveloffset=+1]
+
+include::../../install_installing-rhdh-on-aks/master.adoc[leveloffset=+1]
+
+include::../../install_installing-rhdh-on-eks/master.adoc[leveloffset=+1]
+
+include::../../install_installing-rhdh-on-gke/master.adoc[leveloffset=+1]
+
+include::../../install_installing-rhdh-on-ocp/master.adoc[leveloffset=+1]
+
+include::../../install_installing-rhdh-on-osd-on-gcp/master.adoc[leveloffset=+1]
