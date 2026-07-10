@@ -51,7 +51,7 @@ Replace `<tag>` with the version tag corresponding to your {product-short} versi
 `
 
 |*Auth Frontend*
-|0.1.6|`oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-auth:<tag>`
+|0.1.9|`oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-auth:<tag>`
 
 `
 
@@ -72,14 +72,14 @@ Replace `<tag>` with the version tag corresponding to your {product-short} versi
 `
 
 |*Catalog Backend Module Bitbucket Cloud*
-|0.5.9|`oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-catalog-backend-module-bitbucket-cloud:<tag>`
+|0.5.12|`oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-catalog-backend-module-bitbucket-cloud:<tag>`
 
 `BITBUCKET_WORKSPACE`
 
 `
 
 |*Catalog Backend Module Bitbucket Server*
-|0.5.9|`oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-catalog-backend-module-bitbucket-server:<tag>`
+|0.5.12|`oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-catalog-backend-module-bitbucket-server:<tag>`
 
 `BITBUCKET_HOST`
 
@@ -246,7 +246,7 @@ Replace `<tag>` with the version tag corresponding to your {product-short} versi
 `
 
 |*Scaffolder Backend Module Azure*
-|0.2.19|`oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-scaffolder-backend-module-azure:<tag>`
+|0.2.22|`oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-scaffolder-backend-module-azure:<tag>`
 
 `
 
@@ -256,12 +256,12 @@ Replace `<tag>` with the version tag corresponding to your {product-short} versi
 `
 
 |*Scaffolder Backend Module Bitbucket Cloud*
-|0.3.4|`oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-scaffolder-backend-module-bitbucket-cloud:<tag>`
+|0.3.7|`oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-scaffolder-backend-module-bitbucket-cloud:<tag>`
 
 `
 
 |*Scaffolder Backend Module Bitbucket Server*
-|0.2.19|`oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-scaffolder-backend-module-bitbucket-server:<tag>`
+|0.2.22|`oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-scaffolder-backend-module-bitbucket-server:<tag>`
 
 `
 
@@ -271,7 +271,7 @@ Replace `<tag>` with the version tag corresponding to your {product-short} versi
 `
 
 |*Scaffolder Backend Module Gerrit*
-|0.2.19|`oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-scaffolder-backend-module-gerrit:<tag>`
+|0.2.22|`oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-scaffolder-backend-module-gerrit:<tag>`
 
 `
 
